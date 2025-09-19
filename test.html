@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppUtils 调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 100px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>AppUtils 调试工具</h1>
+    
+    <div class="section">
+        <h2>设备检测</h2>
+        <button onclick="detectDevice()">检测当前设备</button>
+        <div id="deviceInfo"></div>
+    </div>
+    
+    <div class="section">
+        <h2>微信测试</h2>
+        <button onclick="testWeChatOpen()">尝试打开微信</button>
+        <button onclick="testWeChatDownload()">下载微信</button>
+    </div>
+    
+    <div class="section">
+        <h2>抖音测试</h2>
+        <button onclick="testDouYinOpen()">尝试打开抖音</button>
+        <button onclick="testDouYinDownload()">下载抖音</button>
+    </div>
+    
+    <div class="section">
+        <h2>自定义APP测试</h2>
+        <div>
+            <label for="androidUrl">Android URL:</label><br>
+            <input type="text" id="androidUrl" style="width: 100%" 
+                   value="https://play.google.com/store/apps/details?id=com.tencent.mm"><br>
+            
+            <label for="iosUrl">iOS URL:</label><br>
+            <input type="text" id="iosUrl" style="width: 100%" 
+                   value="https://apps.apple.com/cn/app/wechat/id414478124"><br>
+            
+            <label for="deepLink">Deep Link:</label><br>
+            <input type="text" id="deepLink" style="width: 100%" value="weixin://"><br>
+            
+            <label for="universalLink">Universal Link:</label><br>
+            <input type="text" id="universalLink" style="width: 100%" value="https://weixin.qq.com/"><br>
+            
+            <button onclick="testCustomApp()">测试自定义APP</button>
+        </div>
+    </div>
+    
+    <div id="output">操作结果将显示在这里...</div>
+
+    <script>
+        // AppUtils 类实现
+        class AppUtils {
+            constructor(options) {
+                this.options = {
+                    fallbackUrl: 'https://example.com/download',
+                    ...options
+                };
+            }
+
+            detectDevice() {
+                const ua = navigator.userAgent;
+                if (/android/i.test(ua)) {
+                    return 'android';
+                } else if (/iphone|ipad|ipod/i.test(ua)) {
+                    return 'ios';
+                }
+                return 'other';
+            }
+
+            openApp(onFallback, timeout = 2000) {
+                const device = this.detectDevice();
+                let openUrl = this.options.deepLink;
+                
+                if (device === 'ios' && this.options.universalLink) {
+                    openUrl = this.options.universalLink;
+                }
+
+                this._tryOpenApp(openUrl, () => {
+                    if (typeof onFallback === 'function') {
+                        onFallback(device);
+                    } else {
+                        this.download(device);
+                    }
+                }, timeout);
+            }
+
+            download(deviceType) {
+                const device = deviceType || this.detectDevice();
+                
+                switch (device) {
+                    case 'android':
+                        this._downloadAndroid();
+                        break;
+                    case 'ios':
+                        this._downloadIOS();
+                        break;
+                    default:
+                        window.location.href = this.options.fallbackUrl;
+                }
+            }
+
+            _tryOpenApp(url, onFail, timeout) {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                
+                let timer = setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    onFail();
+                    log('打开APP超时，将回退到下载');
+                }, timeout);
+
+                iframe.onload = () => {
+                    clearTimeout(timer);
+                    document.body.removeChild(iframe);
+                };
+
+                document.body.appendChild(iframe);
+            }
+
+            _downloadAndroid() {
+                if (this.options.androidUrl) {
+                    window.location.href = this.options.androidUrl;
+                } else {
+                    window.location.href = this.options.fallbackUrl;
+                }
+            }
+
+            _downloadIOS() {
+                if (this.options.iosUrl) {
+                    window.location.href = this.options.iosUrl;
+                } else {
+                    window.location.href = this.options.fallbackUrl;
+                }
+            }
+        }
+
+        // 测试实例
+        const weChatUtils = new AppUtils({
+            androidUrl: 'https://play.google.com/store/apps/details?id=com.tencent.mm',
+            iosUrl: 'https://apps.apple.com/cn/app/wechat/id414478124',
+            deepLink: 'weixin://',
+            universalLink: 'https://weixin.qq.com/',
+            fallbackUrl: 'https://weixin.qq.com/'
+        });
+
+        const douYinUtils = new AppUtils({
+            androidUrl: 'https://play.google.com/store/apps/details?id=com.ss.android.ugc.aweme',
+            iosUrl: 'https://apps.apple.com/cn/app/%E6%8A%96%E9%9F%B3/id1142110895',
+            deepLink: 'snssdk1128://',
+            universalLink: 'https://www.douyin.com/',
+            fallbackUrl: 'https://www.douyin.com/'
+        });
+
+        // 日志函数
+        function log(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // 测试函数
+        function detectDevice() {
+            const device = weChatUtils.detectDevice();
+            document.getElementById('deviceInfo').innerHTML = `
+                <p>用户代理: ${navigator.userAgent}</p>
+                <p>检测到的设备: <strong>${device}</strong></p>
+            `;
+            log(`检测设备: ${device}`);
+        }
+
+        function testWeChatOpen() {
+            log('尝试打开微信...');
+            weChatUtils.openApp((device) => {
+                log(`无法打开微信，将下载${device}版本`);
+                weChatUtils.download(device);
+            });
+        }
+
+        function testWeChatDownload() {
+            log('开始下载微信...');
+            weChatUtils.download();
+        }
+
+        function testDouYinOpen() {
+            log('尝试打开抖音...');
+            douYinUtils.openApp((device) => {
+                log(`无法打开抖音，将下载${device}版本`);
+                douYinUtils.download(device);
+            });
+        }
+
+        function testDouYinDownload() {
+            log('开始下载抖音...');
+            douYinUtils.download();
+        }
+
+        function testCustomApp() {
+            const androidUrl = document.getElementById('androidUrl').value;
+            const iosUrl = document.getElementById('iosUrl').value;
+            const deepLink = document.getElementById('deepLink').value;
+            const universalLink = document.getElementById('universalLink').value;
+            
+            const customApp = new AppUtils({
+                androidUrl,
+                iosUrl,
+                deepLink,
+                universalLink
+            });
+            
+            log('测试自定义APP...');
+            customApp.openApp((device) => {
+                log(`无法打开自定义APP，将下载${device}版本`);
+                customApp.download(device);
+            });
+        }
+    </script>
+</body>
+</html>
