@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaHeart,
   FaCalendar,
@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 
 function Header () {
+  const navigate = useNavigate()
   const [searchVisible, setSearchVisible] = useState(false);
   const location = useLocation();
 
@@ -32,6 +33,10 @@ function Header () {
       default: return '甜蜜时光';
     }
   };
+
+  const toSettingsPage = () => {
+    navigate('/set')
+  }
 
   return (
     <header className="header">
@@ -48,7 +53,7 @@ function Header () {
               <button className="icon-btn" onClick={() => setSearchVisible(true)}>
                 <FaSearch />
               </button>
-              <button className="icon-btn">
+              <button className="icon-btn" onClick={() => toSettingsPage()}>
                 <FaEllipsisH />
               </button>
             </>

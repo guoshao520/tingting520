@@ -28,7 +28,7 @@ function MemoryCard({ memory }) {
       </div>
       <div className="memory-content">
         <h4>{memory.title}</h4>
-        <p className="ellipsis-2">{memory.boy_content}</p>
+        <p className="ellipsis-2">{memory.content}</p>
       </div>
     </div>
   );

@@ -13,13 +13,17 @@ import {
   FaShareAlt,
 } from 'react-icons/fa'
 import { useParams } from 'react-router-dom'
-import './detail.css'
+import './MemoriesDetail.css'
 import { memorieInfo } from '@/data'
 
 const MemoryDetail = ({ memory }) => {
   const { id } = useParams() // 获取URL中的id参数
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const memoryData = memorieInfo[id]
+
+  const handleBack = () => {
+    window.history.back() // 浏览器后退
+  }
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -31,10 +35,6 @@ const MemoryDetail = ({ memory }) => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === 0 ? memoryData.images.length - 1 : prevIndex - 1
     )
-  }
-
-  const handleBack = () => {
-    window.history.back() // 浏览器后退
   }
 
   return (
@@ -105,7 +105,7 @@ const MemoryDetail = ({ memory }) => {
 
         <div className="memory-body">
           <div className="memory-text">
-            {memoryData.boy_content?.split('\n').map((paragraph, index) => (
+            {memoryData.content?.split('\n').map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>
