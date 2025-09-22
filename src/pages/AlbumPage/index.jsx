@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaPlus } from 'react-icons/fa'
 import './AlbumPage.css' // 假设你有样式文件
 
@@ -15,6 +16,7 @@ const imageContext2024 = require.context(
 )
 
 function AlbumPage() {
+  const navigate = useNavigate()
   const [images, setImages] = useState([])
   const [selectedYear, setSelectedYear] = useState('2025')
   const [loading, setLoading] = useState(false)
@@ -46,7 +48,7 @@ function AlbumPage() {
   }, [selectedYear])
 
   function addAlbum() {
-    alert("暂未开发")
+    navigate('/upload')
   }
 
   return (

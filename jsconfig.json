@@ -8,7 +8,8 @@
      "@/hooks/*": ["hooks/*"],
      "@/assets/*": ["assets/*"],
      "@/styles/*": ["styles/*"],
-     "@/data/*": ["data/*"]
+     "@/data/*": ["data/*"],
+     "@/api/*": ["api/*"]
    }
  },
  "include": ["src/**/*"]

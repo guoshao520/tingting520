@@ -10,6 +10,7 @@ module.exports = {
       '@/assets': path.resolve(__dirname, 'src/assets'),
       '@/styles': path.resolve(__dirname, 'src/styles'),
       '@/data': path.resolve(__dirname, 'src/data'),
+      '@/api': path.resolve(__dirname, 'src/api'),
     }
   }
 };

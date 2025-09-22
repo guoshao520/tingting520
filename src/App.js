@@ -8,6 +8,7 @@ import AlbumPage from './pages/AlbumPage';
 import WishesPage from './pages/WishesPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import UploadPage from './pages/UploadPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import './App.css';
@@ -45,6 +46,7 @@ function App () {
           <Route path="/wishes" element={<WishesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/set" element={<SettingsPage />} />
+          <Route path="/upload" element={<UploadPage />} />
         </Routes>
       </Layout>
     </Router>
