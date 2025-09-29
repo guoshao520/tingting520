@@ -17,6 +17,7 @@ import {
   FaAngleRight
 } from 'react-icons/fa'
 import './SettingsPage.css'
+import TopNavBar from '@/components/TopNavBar'
 
 const SettingsPage = ({ onBack, onLogout }) => {
   const navigate = useNavigate()
@@ -46,12 +47,7 @@ const SettingsPage = ({ onBack, onLogout }) => {
 
   return (
     <div className="settings-container">
-      <header className="settings-header">
-        <button className="back-button" onClick={handleBack}>
-          <FaArrowLeft />
-        </button>
-        <h2>设置中心</h2>
-      </header>
+      <TopNavBar title={'设置中心'} />
 
       <div className="settings-content">
         <div className="settings-menu">

@@ -1,20 +1,20 @@
 import http from '@/utils/request';
 
 const photos = {
-  // 查询配置详情
-  detail: (id) => http.get(`/generalconfig/detail/${id}`),
+  // 查询照片详情
+  detail: (id) => http.get(`/photo/detail/${id}`),
 
-  // 创建配置
-  create: (data) => http.post('/generalconfig/create', data),
+  // 创建照片
+  create: (data) => http.post('/photo/upload', data),
 
-  // 更新配置
-  update: (id, data) => http.put(`/generalconfig/update/${id}`, data),
+  // 更新照片
+  update: (id, data) => http.put(`/photo/update/${id}`, data),
 
-  // 删除配置
-  delete: (id) => http.delete(`/generalconfig/delete/${id}`),
+  // 删除照片
+  delete: (id) => http.delete(`/photo/delete/${id}`),
 
-  // 获取配置列表
-  list: (params) => http.get('/generalconfig/list', params),
+  // 获取照片列表
+  list: (params) => http.get('/photo/list', params),
 };
 
 export default photos

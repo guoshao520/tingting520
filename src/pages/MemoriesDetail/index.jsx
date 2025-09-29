@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   FaArrowLeft,
   FaHeart,
@@ -15,12 +15,14 @@ import {
 import { useParams } from 'react-router-dom'
 import './MemoriesDetail.css'
 import { memorieInfo } from '@/data'
+import memory from '@/api/memory'
+import TopNavBar from '@/components/TopNavBar'
 
-const MemoryDetail = ({ memory }) => {
+const MemoryDetail = () => {
   const { id } = useParams() // 获取URL中的id参数
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const memoryData = memorieInfo[id]
-
+  const [memoryData, setMemoryData] = useState({ images: [] })
+ 
   const handleBack = () => {
     window.history.back() // 浏览器后退
   }
@@ -37,20 +39,28 @@ const MemoryDetail = ({ memory }) => {
     )
   }
 
+  async function getMemoriesInfo() {
+    const { data } = await memory.detail(id);
+    const obj = {
+      ...data.memory,
+      images: data.photos
+    }
+    setMemoryData(obj)
+  }
+
+  useEffect(() => {
+    getMemoriesInfo();
+  }, []);
+
   return (
     <div className="memory-detail">
-      <header className="memory-header">
-        <button className="back-button" onClick={handleBack}>
-          <FaArrowLeft />
-        </button>
-        <h2>回忆详情</h2>
-      </header>
+      <TopNavBar title={'回忆详情'} />
 
       <div className="memory-content">
         <div className="memory-hero">
           <div className="image-gallery">
             <img
-              src={memoryData.images[currentImageIndex]}
+              src={window._config.DOMAIN_URL + memoryData.images[currentImageIndex]?.image_url}
               alt={memoryData.title}
               className="main-image"
             />
@@ -90,14 +100,6 @@ const MemoryDetail = ({ memory }) => {
               <span className="tag">
                 <FaMapMarkerAlt className="tag-icon" />
                 {memoryData.location}
-              </span>
-              <span className="tag">
-                <FaCloudSun className="tag-icon" />
-                {memoryData.weather}
-              </span>
-              <span className="tag">
-                <FaSmile className="tag-icon" />
-                {memoryData.mood}
               </span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import useUpYunUpload from '@/hooks/useUpYunUpload'
 import './ImageUploader.css'
+import { toastSuccess } from '@/utils/toast'
 
 const ImageUploader = ({ onUploadSuccess, onUploadError }) => {
   const [isDragging, setIsDragging] = useState(false)
@@ -110,7 +111,7 @@ const ImageUploader = ({ onUploadSuccess, onUploadError }) => {
 
         // 显示结果摘要
         if (errors.length > 0) {
-          alert(
+          toastSuccess(
             `上传完成。成功: ${successfulUploads.length}, 失败: ${errors.length}`
           )
         }
@@ -130,11 +131,6 @@ const ImageUploader = ({ onUploadSuccess, onUploadError }) => {
 
   return (
     <div className="image-uploader">
-      <div className="uploader-header">
-        <h2>上传照片</h2>
-        <p>支持拖放或点击选择照片</p>
-      </div>
-
       <div
         className={`uploader-dropzone ${isDragging ? 'dragging' : ''}`}
         onDragEnter={handleDragEnter}

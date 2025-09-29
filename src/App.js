@@ -9,9 +9,14 @@ import WishesPage from './pages/WishesPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import UploadPage from './pages/UploadPage';
+import AddMemoryPage from './pages/AddMemoryPage';
+import AddDatePage from './pages/AddDatePage';
+import WishListPage from './pages/WishListPage';
+import AddWishPage from './pages/AddWishPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import './App.css';
+import '@/utils/baseUrl';
 
 // Layout 组件
 function Layout ({ children }) {
@@ -47,6 +52,10 @@ function App () {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/set" element={<SettingsPage />} />
           <Route path="/upload" element={<UploadPage />} />
+          <Route path="/add-memory" element={<AddMemoryPage />} />
+          <Route path="/add-date" element={<AddDatePage />} />
+          <Route path="/wish-list" element={<WishListPage />} />
+          <Route path="/add-wish" element={<AddWishPage />} />
         </Routes>
       </Layout>
     </Router>

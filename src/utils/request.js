@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { toastMsg } from '@/utils/toast'
 
 // 创建 axios 实例
 const request = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || '/api',
+  baseURL: process.env.REACT_APP_API_BASE_URL || '/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -18,8 +19,6 @@ request.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // 可以在这里添加全局参数
-    console.log('请求配置:', config);
     return config;
   },
   (error) => {
@@ -54,29 +53,29 @@ const handleResponseError = (data, response) => {
   switch (code) {
     case 401:
       // 认证失败
-      alert(msg || '认证失败，请重新登录')
+      toastMsg(msg || '认证失败，请重新登录')
       // 清除 token 并跳转到登录页
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // window.location.href = '/login';
       break;
 
     case 412:
       // 缺少查询参数
-      alert(msg || '请求参数不完整')
+      toastMsg(msg || '请求参数不完整')
       break;
 
     case 403:
       // 无权限
-      alert(msg || '您没有权限执行此操作')
+      toastMsg(msg || '您没有权限执行此操作')
       break;
 
     case 500:
       // 系统异常
-      alert(msg || '系统异常，请稍后重试')
+      toastMsg(msg || '系统异常，请稍后重试')
       break;
 
     default:
-      alert(msg || '请求失败')
+      toastMsg(msg || '请求失败')
   }
 
   return Promise.reject({ code, message: msg, data: data.data });
@@ -90,25 +89,25 @@ const handleNetworkError = (error) => {
 
     switch (status) {
       case 401:
-        alert('认证失败，请重新登录')
+        toastMsg('认证失败，请重新登录')
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        // window.location.href = '/login';
         break;
 
       case 403:
-        alert('您没有权限执行此操作')
+        toastMsg('您没有权限执行此操作')
         break;
 
       case 404:
-        alert('请求的资源不存在')
+        toastMsg('请求的资源不存在')
         break;
 
       case 500:
-        alert('服务器内部错误')
+        toastMsg('服务器内部错误')
         break;
 
       default:
-        alert(`请求错误: ${status}`)
+        toastMsg(`请求错误: ${status}`)
     }
 
     return Promise.reject({
@@ -118,7 +117,7 @@ const handleNetworkError = (error) => {
     });
   } else if (error.request) {
     // 请求已发出但没有收到响应
-    alert('网络异常，请检查网络连接')
+    toastMsg('网络异常，请检查网络连接')
     return Promise.reject({
       code: -1,
       message: '网络异常',
@@ -126,7 +125,7 @@ const handleNetworkError = (error) => {
     });
   } else {
     // 请求配置错误
-    alert('请求配置错误')
+    toastMsg('请求配置错误')
     return Promise.reject({
       code: -2,
       message: error.message,
@@ -156,11 +155,18 @@ const createRequestMethod = (method) => (url, data = {}, config = {}) => {
 
 // 具体请求方法
 export const http = {
-  get: createRequestMethod('get'),
-  post: createRequestMethod('post'),
-  put: createRequestMethod('put'),
-  patch: createRequestMethod('patch'),
-  delete: createRequestMethod('delete'),
+  // get: createRequestMethod('get'),
+  // post: createRequestMethod('post'),
+  // put: createRequestMethod('put'),
+  // patch: createRequestMethod('patch'),
+  // delete: createRequestMethod('delete'),
+  // request, // 原始 axios 实例，用于特殊需求
+  // 无接口模式：调试
+  get: () => Promise.resolve({ code: 200, data: [] }),
+  post: () => Promise.resolve({ code: 200, data: [] }),
+  put: () => Promise.resolve({ code: 200, data: [] }),
+  patch: () => Promise.resolve({ code: 200, data: [] }),
+  delete: () => Promise.resolve({ code: 200, data: [] }),
   request, // 原始 axios 实例，用于特殊需求
 };
 

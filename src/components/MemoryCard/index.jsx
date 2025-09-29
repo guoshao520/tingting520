@@ -23,7 +23,7 @@ function MemoryCard({ memory }) {
   return (
     <div className="memory-card">
       <div className="memory-image">
-        <img src={memory.image} alt={memory.title} />
+        <img src={window._config.DOMAIN_URL + memory.image} alt={memory.title} />
         <div className="memory-date">{memory.date}</div>
       </div>
       <div className="memory-content">

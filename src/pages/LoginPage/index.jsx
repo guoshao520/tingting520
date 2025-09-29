@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaHeart } from 'react-icons/fa';
 import './LoginPage.css';
+import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const LoginPage = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('登录数据:', formData);
-      alert('登录成功！');
+      toastSuccess('登录成功！');
     } catch (error) {
       console.error('登录失败:', error);
     } finally {

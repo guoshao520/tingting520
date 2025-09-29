@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,13 +25,17 @@ import {
 } from 'react-icons/fa'
 import DateCard from '@/components/DateCard'
 import MemoryCard from '@/components/MemoryCard'
-import { importantDates, memories } from '@/data'
+import { importantDates } from '@/data'
 import { calculateDaysFromNow } from '@/utils'
 import proImage from '@/assets/images/first/Image_53712341142431.jpg'
+import memory from '@/api/memory'
+import importantDate from '@/api/importantDate'
 
 function HomePage() {
   const navigate = useNavigate()
-  const count = calculateDaysFromNow('2024-06-30')
+  const count = calculateDaysFromNow("2024-06-30")
+  const [memories, setMemories] = useState([])
+  const [importantDates, setImportantDates] = useState([])
 
   function toMemories() {
     navigate(`/memories`)
@@ -41,12 +46,27 @@ function HomePage() {
   }
 
   function wishList() {
-    alert('暂未开发')
+    navigate(`/wish-list`)
   }
 
   const handleMemoryClick = (memoryId) => {
     navigate(`/memories/${memoryId}`)
   }
+
+  async function getMemoriesList() {
+    const { data } = await memory.list({ couple_id: 1 });
+    setMemories(data.rows || []);
+  }
+
+  async function getImportantDatesList() {
+    const { data } = await importantDate.list({ couple_id: 1 });
+    setImportantDates(data || []);
+  }
+
+  useEffect(() => {
+    getMemoriesList();
+    getImportantDatesList();
+  }, []);
 
   return (
     <div className="page">

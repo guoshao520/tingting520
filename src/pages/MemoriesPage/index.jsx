@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   FaHeart,
@@ -15,18 +16,29 @@ import {
   FaClock,
   FaCheck,
 } from 'react-icons/fa'
-import { memories } from '@/data'
+import memory from '@/api/memory'
+import EmptyState from '@/components/EmptyState'
 
 function MemoriesPage() {
   const navigate = useNavigate()
+  const [memories, setMemories] = useState([])
 
   const handleMemoryClick = (memoryId) => {
     navigate(`/memories/${memoryId}`)
   }
 
   function addMemories() {
-    alert("暂未开发")
+    navigate('/add-memory')
   }
+
+  async function getMemoriesList() {
+    const { data } = await memory.list({ couple_id: 1 });
+    setMemories(data.rows || []);
+  }
+
+  useEffect(() => {
+    getMemoriesList();
+  }, []);
 
   return (
     <div className="page">
@@ -37,6 +49,8 @@ function MemoriesPage() {
             <FaPlus /> 添加回忆
           </button>
         </div>
+
+        <EmptyState showBox={memories?.length === 0} />
         <div className="memories-list">
           {memories.map((memory) => (
             <div
@@ -44,10 +58,10 @@ function MemoriesPage() {
               className="memory-list-item"
               onClick={() => handleMemoryClick(memory.id)}
             >
-              <img src={memory.image} alt={memory.title} />
+              <img src={window._config.DOMAIN_URL + memory.image} alt={memory.title} />
               <div className="memory-info">
                 <h4>{memory.title}</h4>
-                <p>{memory.date}</p>
+                <p>{memory.memory_date}</p>
               </div>
             </div>
           ))}

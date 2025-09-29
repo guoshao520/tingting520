@@ -4,12 +4,13 @@ import SparkMD5 from 'spark-md5';
 const useUpYunUpload = () => {
   // 获取账户信息 - 实际应用中应从安全的地方获取
   const getAccountInfo = useCallback(() => {
-    return {
-      bucket_name: "your-bucket-name",
-      opename: "your-operator-name",
-      opepass: "your-operator-password",
-      acc_point: "https://v0.api.upyun.com/"
-    };
+    const info = {
+      bucket_name: "guoshao-service",
+      opename: "guoshao520",
+      opepass: "29ul2LJr2z8A130W2i3VJErGh25nD5Xg",
+      acc_point: "http://v0.api.upyun.com/"
+    }
+    return info
   }, []);
 
   // 上传分块
