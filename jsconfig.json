@@ -12,5 +12,5 @@
      "@/api/*": ["api/*"]
    }
  },
- "include": ["src/**/*"]
+ "include": ["src/**/*", "postcss.config.js"]
 }

@@ -44,6 +44,12 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
-    "eslint-import-resolver-alias": "^1.1.2"
+    "craco-less": "^3.0.1",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "lib-flexible": "^0.3.2",
+    "postcss": "^8.5.6",
+    "postcss-px-to-viewport": "^1.1.1",
+    "postcss-px2rem": "^0.3.0",
+    "postcss-pxtorem": "^5.1.1"
   }
 }
