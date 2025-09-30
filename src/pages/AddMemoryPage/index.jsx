@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import './AddMemoryPage.css';
+import './AddMemoryPage.less';
 import ImageUploader from '@/components/ImageUploader';
 import memory from '@/api/memory';
 import TopNavBar from '@/components/TopNavBar';

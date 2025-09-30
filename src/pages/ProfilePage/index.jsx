@@ -69,7 +69,7 @@ function ProfilePage() {
     <div className="page">
       <div className="profile-header">
         <div className="profile-avatar">
-          <ImagePreview width={74} height={74} imageList={imgList} />
+          <ImagePreview image={imgList[0]} />
         </div>
         <div className="profile-info">
           <h2>郭步 & 李婷婷</h2>

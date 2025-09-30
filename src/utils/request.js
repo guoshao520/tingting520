@@ -155,13 +155,16 @@ const createRequestMethod = (method) => (url, data = {}, config = {}) => {
 
 // 具体请求方法
 export const http = {
-  // get: createRequestMethod('get'),
-  // post: createRequestMethod('post'),
-  // put: createRequestMethod('put'),
-  // patch: createRequestMethod('patch'),
-  // delete: createRequestMethod('delete'),
-  // request, // 原始 axios 实例，用于特殊需求
-  // 无接口模式：调试
+  get: createRequestMethod('get'),
+  post: createRequestMethod('post'),
+  put: createRequestMethod('put'),
+  patch: createRequestMethod('patch'),
+  delete: createRequestMethod('delete'),
+  request, // 原始 axios 实例，用于特殊需求
+};
+
+// 无接口模式
+export const noInterfaceHttp = {
   get: () => Promise.resolve({ code: 200, data: [] }),
   post: () => Promise.resolve({ code: 200, data: [] }),
   put: () => Promise.resolve({ code: 200, data: [] }),
@@ -170,4 +173,4 @@ export const http = {
   request, // 原始 axios 实例，用于特殊需求
 };
 
-export default http;
+export default noInterfaceHttp;

@@ -4,17 +4,15 @@ import { ImageViewer } from 'antd-mobile' // 注意导入路径（不同版本�
 
 // 图片预览组组件
 const ImagePreview = ({
-  imageList, // 图片地址数组（必传）
-  width = 100, // 缩略图宽度
-  height = 100, // 缩略图高度
+  currIndex, // 当前图片索引
+  image, // 单张图片
+  imageList, // 图片地址数组
   style = {}, // 缩略图自定义样式
 }) => {
   const [visible, setVisible] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
 
   // 点击缩略图触发预览
-  const handleThumbClick = (index) => {
-    setCurrentIndex(index)
+  const handleThumbClick = () => {
     setVisible(true)
   }
 
@@ -25,38 +23,31 @@ const ImagePreview = ({
 
   return (
     <>
-      {/* 缩略图列表 */}
-      <div
+      <Image
+        src={image || imageList[currIndex]}
+        onClick={() => handleThumbClick()}
         style={{
-          display: 'flex',
-          gap: 16,
-          flexWrap: 'wrap',
+          objectFit: 'cover',
+          ...style, // 合并自定义样式
         }}
-      >
-        {imageList.map((src, index) => (
-          <Image
-            key={index}
-            src={src}
-            onClick={() => handleThumbClick(index)}
-            style={{
-              width: width,
-              height: height,
-              objectFit: 'cover',
-              ...style, // 合并自定义样式
-            }}
-            alt={`预览图片 ${index + 1}`}
+      />
+      {visible &&
+        (image ? (
+          <ImageViewer
+            visible={visible}
+            image={image}
+            onClose={handleClose}
+            closeOnMaskClick={true}
+          />
+        ) : (
+          <ImageViewer.Multi
+            visible={visible}
+            images={imageList}
+            defaultIndex={currIndex}
+            onClose={handleClose}
+            closeOnMaskClick={true}
           />
         ))}
-      </div>
-
-      {/* 预览弹窗 */}
-      <ImageViewer.Multi
-        visible={visible}
-        images={imageList}
-        defaultIndex={currentIndex} // 初始显示当前点击的图片
-        onClose={handleClose}
-        closeOnMaskClick={true} // 点击蒙层关闭（默认true）
-      />
     </>
   )
 }

@@ -1,0 +1,117 @@
+/* SettingsPage.css */
+.settings-container {
+  min-height: 100vh;
+  background: #f8f9fa;
+
+  .settings-content {
+    max-width: 13.333rem;
+    margin: 0 auto;
+    padding: 0 0.533rem;
+
+    .settings-menu {
+      background: white;
+      border-radius: 0.427rem;
+      box-shadow: 0 0.053rem 0.32rem rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin: 0.533rem 0;
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.533rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-bottom: 0.027rem solid #f0f0f0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background-color: #f8f9fa;
+        }
+
+        .menu-item-left {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+
+          .menu-icon {
+            color: #666;
+            font-size: 0.031rem;
+            width: 0.533rem;
+            text-align: center;
+          }
+
+          .menu-label {
+            color: #333;
+            font-size: 0.427rem;
+            font-weight: 500;
+          }
+        }
+
+        .menu-arrow {
+          display: flex;
+          align-items: center;
+          color: #999;
+          font-size: 0.32rem!important;
+          font-weight: 300;
+        }
+      }
+    }
+
+    .logout-section {
+      text-align: center;
+
+      .logout-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.267rem;
+        padding: 0.4rem 0.8rem;
+        background: linear-gradient(135deg, #ff6b8b 0%, #ff8e8e 100%);
+        color: white;
+        border: none;
+        border-radius: 0.667rem;
+        font-size: 0.427rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0.107rem 0.4rem rgba(255, 107, 139, 0.3);
+
+        &:hover {
+          transform: translateY(-0.053rem);
+          box-shadow: 0 0.16rem 0.533rem rgba(255, 107, 139, 0.4);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .settings-header {
+    margin-bottom: 0.533rem;
+
+    h1 {
+      font-size: 0.56rem;
+    }
+  }
+  
+  .menu-item {
+    padding: 0.427rem;
+  }
+  
+  .menu-label {
+    font-size: 0.4rem;
+  }
+  
+  .logout-button {
+    padding: 0.32rem 0.667rem;
+    font-size: 0.4rem;
+  }
+}

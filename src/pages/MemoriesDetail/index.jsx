@@ -13,7 +13,7 @@ import {
   FaShareAlt,
 } from 'react-icons/fa'
 import { useParams } from 'react-router-dom'
-import './MemoriesDetail.css'
+import './MemoriesDetail.less'
 import { memorieInfo } from '@/data'
 import memory from '@/api/memory'
 import TopNavBar from '@/components/TopNavBar'

@@ -1,26 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
-import './AlbumPage.css'; // 假设你有样式文件
-import photos from '@/api/photos';
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FaPlus } from 'react-icons/fa'
+import './AlbumPage.less' // 假设你有样式文件
+import photos from '@/api/photos'
 import EmptyState from '@/components/EmptyState'
+import ImagePreview from '@/components/ImagePreview'
 
 function AlbumPage() {
-  const navigate = useNavigate();
-  const [images, setImages] = useState([]);
+  const navigate = useNavigate()
+  const [images, setImages] = useState([])
 
   async function getPhotoList() {
-    const { data } = await photos.list();
-    const imgs = data.map((v) => v.image_url);
-    setImages(imgs || []);
+    // const { data } = await photos.list();
+    // const imgs = data.map((v) => v.image_url);
+    const imgs = [
+      'https://picsum.photos/800/600?1',
+      'https://picsum.photos/800/600?1',
+      'https://picsum.photos/800/600?1',
+      'https://picsum.photos/800/600?1',
+      'https://picsum.photos/800/600?1',
+    ]
+    setImages(imgs || [])
   }
 
   useEffect(() => {
-    getPhotoList();
-  }, []);
+    getPhotoList()
+  }, [])
 
   function addAlbum() {
-    navigate('/upload');
+    navigate('/upload')
   }
 
   return (
@@ -37,16 +45,13 @@ function AlbumPage() {
         <div className="album-grid">
           {images.map((item, index) => (
             <div key={index} className="album-item">
-              <img src={window._config.DOMAIN_URL + item} />
-              <div className="image-overlay">
-                <span className="image-date">亲亲</span>
-              </div>
+              <ImagePreview currIndex={index} imageList={images} />
             </div>
           ))}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default AlbumPage;
+export default AlbumPage

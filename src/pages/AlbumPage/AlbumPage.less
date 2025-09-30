@@ -1,0 +1,106 @@
+/* 年份选择器 */
+.year-selector {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.427rem;
+  background: #f8f9fa;
+  border-radius: 0.32rem;
+  font-size: 0.4rem;
+
+  .year-label {
+    font-weight: 600;
+    margin-right: 0.4rem;
+    color: #333;
+  }
+
+  .year-buttons {
+    display: flex;
+    gap: 0.267rem;
+    flex-wrap: wrap;
+
+    .year-btn {
+      padding: 0.213rem 0.427rem;
+      border: 0.053rem solid #e9ecef;
+      background: white;
+      border-radius: 0.533rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+
+      &:hover {
+        border-color: #ff6b8b;
+        color: #ff6b8b;
+      }
+
+      &.active {
+        background: #ff6b8b;
+        color: white;
+        border-color: #ff6b8b;
+      }
+    }
+  }
+}
+
+/* 相册统计 */
+.album-stats {
+  margin-bottom: 0.533rem;
+  padding: 0 0.133rem;
+
+  p {
+    color: #666;
+    font-size: 0.373rem;
+  }
+}
+
+/* 相册网格 */
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
+  gap: 0.32rem;
+  margin-top: 0.533rem;
+
+  .album-item {
+    position: relative;
+    aspect-ratio: 1/1;
+    border-radius: 0.32rem;
+    overflow: hidden;
+    box-shadow: 0 0.053rem 0.213rem rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      /* transform: translateY(-0.107rem); */
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      padding: 0.267rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+
+      .image-date {
+        color: white;
+        font-size: 0.32rem;
+      }
+    }
+
+    &:hover .image-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 1.067rem;
+  color: #666;
+}

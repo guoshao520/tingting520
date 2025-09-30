@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaHeart } from 'react-icons/fa';
-import './LoginPage.css';
+import './LoginPage.less';
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
 
 const LoginPage = () => {

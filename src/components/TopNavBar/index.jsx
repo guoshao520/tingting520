@@ -7,7 +7,7 @@ import {
   FaMoon,
   FaAngleRight,
 } from 'react-icons/fa';
-import './TopNavBar.css'
+import './TopNavBar.less'
 
 // 组件定义
 const NavBar = ({

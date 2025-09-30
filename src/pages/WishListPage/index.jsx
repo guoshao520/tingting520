@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './WishListPage.css';
+import './WishListPage.less';
 import { FaArrowLeft, FaTrashAlt } from 'react-icons/fa';
 import wish from '@/api/wish'; // 引入愿望清单接口
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import './AddWishPage.css';  // 保留原有样式
+import './AddWishPage.less';  // 保留原有样式
 import TopNavBar from '@/components/TopNavBar';
 import wish from '@/api/wish';  // 引入心愿相关接口
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'

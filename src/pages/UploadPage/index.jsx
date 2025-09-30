@@ -1,7 +1,7 @@
 import React from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import photos from '@/api/photos';
-import './UploadPage.css';
+import './UploadPage.less';
 import TopNavBar from '@/components/TopNavBar';
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import './EmptyState.css';
+import './EmptyState.less';
 
 // 空状态组件
 const EmptyState = ({

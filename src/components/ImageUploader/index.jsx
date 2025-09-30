@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import useUpYunUpload from '@/hooks/useUpYunUpload'
-import './ImageUploader.css'
+import './ImageUploader.less'
 import { toastSuccess } from '@/utils/toast'
 
 const ImageUploader = ({ onUploadSuccess, onUploadError }) => {

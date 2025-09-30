@@ -1,0 +1,90 @@
+.add-date-container {
+  max-width: 16rem;
+  margin: 0 auto;
+  padding: 0.533rem;
+  background-color: #fff;
+
+  .date-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.533rem;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+
+      label {
+        font-weight: 600;
+        margin-bottom: 0.213rem;
+        color: #333;
+        font-size: 0.427rem;
+      }
+
+      input,
+      select,
+      textarea {
+        padding: 0.32rem;
+        border: 0.027rem solid #ddd;
+        border-radius: 0.213rem;
+        font-size: 0.427rem;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #ff6b6b;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 2.133rem;
+        font-family: inherit;
+      }
+
+      .char-count {
+        text-align: right;
+        font-size: 0.32rem;
+        color: #999;
+        margin-top: 0.107rem;
+      }
+    }
+
+    .submit-btn {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 0.4rem;
+      border-radius: 0.213rem;
+      font-size: 0.427rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 0.267rem;
+
+      &:hover:not(:disabled) {
+        background-color: #ff5252;
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .add-date-container {
+    padding: 0.4rem;
+    margin: 0.267rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.267rem;
+  }
+}

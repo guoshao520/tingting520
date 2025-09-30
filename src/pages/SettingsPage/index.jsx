@@ -16,7 +16,7 @@ import {
   FaMoon,
   FaAngleRight
 } from 'react-icons/fa'
-import './SettingsPage.css'
+import './SettingsPage.less'
 import TopNavBar from '@/components/TopNavBar'
 
 const SettingsPage = ({ onBack, onLogout }) => {

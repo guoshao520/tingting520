@@ -15,7 +15,7 @@ import WishListPage from './pages/WishListPage';
 import AddWishPage from './pages/AddWishPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
-import './App.css';
+import './App.less';
 import '@/utils/baseUrl';
 
 // Layout 组件
