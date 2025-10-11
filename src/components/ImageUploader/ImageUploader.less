@@ -45,7 +45,7 @@
   .upload-button {
     display: inline-block;
     padding: 0.267rem 0.533rem;
-    background-color: #4A90E2;
+    background-color: var(--primary-color);
     color: white;
     border-radius: 0.107rem;
     cursor: pointer;
@@ -91,8 +91,9 @@
 
     .image-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
-      gap: 0.533rem;
+      // grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4267rem;
 
       .image-item {
         border: 0.027rem solid #eee;

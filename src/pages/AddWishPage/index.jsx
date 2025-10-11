@@ -1,10 +1,13 @@
 import React, { useRef, useState } from 'react';
 import './AddWishPage.less';  // 保留原有样式
+import { useNavigate } from 'react-router-dom';
 import TopNavBar from '@/components/TopNavBar';
 import wish from '@/api/wish';  // 引入心愿相关接口
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
+import { getLoginInfo } from '@/utils/storage'
 
 const AddDatePage = () => {
+  const navigate = useNavigate(); // 初始化路由导航
   // 表单元素引用
   const titleRef = useRef(null);
   const descriptionRef = useRef(null);
@@ -28,8 +31,10 @@ const AddDatePage = () => {
 
     try {
       // 构建心愿参数（对应wishlist模型字段）
+      const loginInfo = getLoginInfo()
+      const couple_id = loginInfo?.couple?.id
       const params = {
-        couple_id: 1,  // 实际项目中应从登录状态获取
+        couple_id,
         title: titleRef.current.value.trim(),
         description: descriptionRef.current.value.trim() || '',
         target_date: targetDateRef.current.value || null,
@@ -41,11 +46,9 @@ const AddDatePage = () => {
       
       if (data.code === 200) {
         toastSuccess('保存成功');
-        // 重置表单
-        titleRef.current.value = '';
-        descriptionRef.current.value = '';
-        targetDateRef.current.value = '';
-        priorityRef.current.value = '1';
+        setTimeout(() => {
+          navigate(-1)
+        }, 1500)
       } else {
         toastFail(data.message);
       }
@@ -60,10 +63,10 @@ const AddDatePage = () => {
   return (
     <div>
       <TopNavBar title={'添加心愿'} />
-      <div className="add-date-container">
-        <form onSubmit={handleSubmit} className="date-form">
-          <div className="form-group">
-            <label>心愿名称 *</label>
+      <div className="add-wish-container">
+        <form onSubmit={handleSubmit} className="wish-form">
+          <div className="form-group is-required">
+            <label>心愿名称</label>
             <input
               type="text"
               ref={titleRef}

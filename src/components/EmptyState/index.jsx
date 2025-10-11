@@ -4,7 +4,7 @@ import './EmptyState.less';
 // 空状态组件
 const EmptyState = ({
   type = 'default', // 类型：default, search, network, data 等
-  title = '暂无数据', // 主标题
+  title = '暂无相关内容', // 主标题
   description, // 描述文字
   image, // 自定义图片
   imageSize = 80, // 图片大小
@@ -13,6 +13,7 @@ const EmptyState = ({
   action, // 操作按钮
   className = '', // 自定义类名
   style = {}, // 自定义样式
+  marginTop = "calc(1.6rem - 0.427rem + 0.32rem)", // 距离顶部距离
   children // 自定义内容
 }) => {
   // 默认图片配置
@@ -55,8 +56,8 @@ const EmptyState = ({
 
   return (
     <div className={`empty-state ${className}`} style={{
-      ...style,
-      display: showBox ? 'block' : 'none'
+      display: showBox ? 'block' : 'none',
+      marginTop,
     }}>
       {showImage && (
         <div className="empty-state-image">
@@ -66,9 +67,9 @@ const EmptyState = ({
       
       <div className="empty-state-content">
         <div className="empty-state-title">{title}</div>
-        <div className="empty-state-description">
+        {/* <div className="empty-state-description">
           {getDefaultDescription()}
-        </div>
+        </div> */}
         
         {action && (
           <div className="empty-state-action">

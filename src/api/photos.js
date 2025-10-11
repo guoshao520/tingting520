@@ -13,6 +13,9 @@ const photos = {
   // 删除照片
   delete: (id) => http.delete(`/photo/delete/${id}`),
 
+  // 批量删除照片
+  batchDelete: (data) => http.delete(`/photo/batchDelete`, data),
+
   // 获取照片列表
   list: (params) => http.get('/photo/list', params),
 };

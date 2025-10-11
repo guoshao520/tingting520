@@ -1,11 +1,14 @@
 import React, { useRef, useState } from 'react';
 import './AddMemoryPage.less';
+import { useNavigate } from 'react-router-dom';
 import ImageUploader from '@/components/ImageUploader';
 import memory from '@/api/memory';
 import TopNavBar from '@/components/TopNavBar';
 import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
+import { getLoginInfo } from '@/utils/storage'
 
 const AddMemory = () => {
+  const navigate = useNavigate(); // 初始化路由导航
   // 表单元素引用
   const titleRef = useRef(null);
   const locationRef = useRef(null);
@@ -27,11 +30,28 @@ const AddMemory = () => {
       return;
     }
 
+    if (!dateRef.current.value.trim()) {
+      toastMsg('请选择日期');
+      return;
+    }
+
+    if (!contentRef.current.value.trim()) {
+      toastMsg('请填写回忆内容');
+      return;
+    }
+
+    if (images.length === 0) {
+      toastMsg('请上传照片');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const loginInfo = getLoginInfo()
+      const couple_id = loginInfo?.couple?.id
       const params = {
-        couple_id: 1,
+        couple_id,
         title: titleRef.current.value,
         location: locationRef.current.value,
         memory_date: dateRef.current.value,
@@ -42,6 +62,9 @@ const AddMemory = () => {
       const data = await memory.create(params);
       if (data.code === 200) {
         toastSuccess('保存成功');
+        setTimeout(() => {
+          navigate(-1)
+        }, 1500)
       } else {
         toastFail(data.message);
       }
@@ -71,13 +94,12 @@ const AddMemory = () => {
   };
 
   return (
-    <div>
+    <div className='add-memory-container'>
       <TopNavBar title={'添加回忆'} />
-      {/* {message && <div className="message">{message}</div>} */}
-      <div className="add-memory-container">
+      <div className="add-memory-content">
         <form onSubmit={handleSubmit} className="memory-form">
-          <div className="form-group">
-            <label>标题 *</label>
+          <div className="form-group is-required">
+            <label>标题</label>
             <input
               type="text"
               ref={titleRef}
@@ -96,13 +118,13 @@ const AddMemory = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group is-required">
             <label>日期</label>
             <input type="date" ref={dateRef} disabled={isSubmitting} />
           </div>
 
-          <div className="form-group">
-            <label>回忆内容 *</label>
+          <div className="form-group is-required">
+            <label>回忆内容</label>
             <textarea
               ref={contentRef}
               rows="5"
@@ -111,7 +133,7 @@ const AddMemory = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group is-required">
             <label>照片</label>
             <div className="form-container">
               <ImageUploader

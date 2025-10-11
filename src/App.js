@@ -1,65 +1,17 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import MemoriesPage from './pages/MemoriesPage';
-import MemoriesDetail from './pages/MemoriesDetail';
-import ImportantDatesPage from './pages/ImportantDatesPage';
-import AlbumPage from './pages/AlbumPage';
-import WishesPage from './pages/WishesPage';
-import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
-import UploadPage from './pages/UploadPage';
-import AddMemoryPage from './pages/AddMemoryPage';
-import AddDatePage from './pages/AddDatePage';
-import WishListPage from './pages/WishListPage';
-import AddWishPage from './pages/AddWishPage';
-import Header from './components/Header';
-import BottomNavigation from './components/BottomNavigation';
+import { useEffect } from 'react'; // 新增导入useEffect
+import { AppRouter } from './router';
 import './App.less';
 import '@/utils/baseUrl';
+import { initTheme } from '@/utils/theme'
 
-// Layout 组件
-function Layout ({ children }) {
-  const location = useLocation();
+// 主应用入口
+function App() {
+  // 🔴 应用初始化时执行initTheme
+  useEffect(() => {
+    initTheme(); // 调用主题初始化函数
+  }, []); // 空依赖项：仅在组件首次挂载（应用启动）时执行一次
 
-  // 需要显示Header和BottomNavigation的页面
-  const showLayout = !['/login'].includes(location.pathname);
-
-  return (
-    <div className="App">
-      {showLayout && <Header />}
-      <main className={showLayout ? '' : 'fullscreen-main'}>
-        {children}
-      </main>
-      {showLayout && <BottomNavigation />}
-    </div>
-  );
-}
-
-// App 组件
-function App () {
-  return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<HomePage />} />
-          <Route path="/memories" element={<MemoriesPage />} />
-          <Route path="/memories/:id" element={<MemoriesDetail />} />
-          <Route path="/dates" element={<ImportantDatesPage />} />
-          <Route path="/album" element={<AlbumPage />} />
-          <Route path="/wishes" element={<WishesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/set" element={<SettingsPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/add-memory" element={<AddMemoryPage />} />
-          <Route path="/add-date" element={<AddDatePage />} />
-          <Route path="/wish-list" element={<WishListPage />} />
-          <Route path="/add-wish" element={<AddWishPage />} />
-        </Routes>
-      </Layout>
-    </Router>
-  );
+  return <AppRouter />;
 }
 
 export default App;

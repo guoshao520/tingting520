@@ -1,10 +1,10 @@
-.add-date-container {
+.add-wish-container {
   max-width: 16rem;
   margin: 0 auto;
   padding: 0.533rem;
-  background-color: #fff;
+  background-color: val(--accent-color);
 
-  .date-form {
+  .wish-form {
     display: flex;
     flex-direction: column;
     gap: 0.533rem;
@@ -52,10 +52,10 @@
     }
 
     .submit-btn {
-      background-color: #ff6b6b;
+      background-color: var(--primary-color);
       color: white;
       border: none;
-      padding: 0.4rem;
+      padding: 0.35rem;
       border-radius: 0.213rem;
       font-size: 0.427rem;
       font-weight: 600;
@@ -77,7 +77,7 @@
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .add-date-container {
+  .add-wish-container {
     padding: 0.4rem;
     margin: 0.267rem;
   }

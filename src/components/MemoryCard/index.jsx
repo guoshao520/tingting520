@@ -22,10 +22,10 @@ function MemoryCard({ memory }) {
 
   return (
     <div className="memory-card">
-      <div className="memory-image">
+      {memory.image && <div className="memory-image">
         <img src={window._config.DOMAIN_URL + memory.image} alt={memory.title} />
-        <div className="memory-date">{memory.date}</div>
-      </div>
+        {memory.memory_date && <div className="memory-date">{memory.memory_date}</div>}
+      </div>}
       <div className="memory-content">
         <h4>{memory.title}</h4>
         <p className="ellipsis-2">{memory.content}</p>

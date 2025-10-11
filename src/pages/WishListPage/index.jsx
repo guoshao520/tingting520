@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import './WishListPage.less';
 import { FaArrowLeft, FaTrashAlt } from 'react-icons/fa';
 import wish from '@/api/wish'; // 引入愿望清单接口
-import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
+import { toastMsg, toastSuccess, toastFail } from '@/utils/toast';
+import { getLoginInfo } from '@/utils/storage';
+import EmptyState from '@/components/EmptyState';
+import { Dialog } from 'antd-mobile';
 
 const WishlistPage = () => {
   const navigate = useNavigate();
@@ -11,26 +14,27 @@ const WishlistPage = () => {
   const [wishes, setWishes] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  const loginInfo = getLoginInfo();
+  const couple_id = loginInfo?.couple?.id;
 
   // 获取愿望列表数据
   const fetchWishes = async () => {
     try {
       setLoading(true);
-      setError('');
-      const data = await wish.list({ couple_id: 1 });
+      const data = await wish.list({ couple_id });
 
       if (data.code === 200) {
         // 2. 强制转为数组（防止后端返回null/object等非数组格式）
-        const validWishes = Array.isArray(data.data.rows) ? data.data.rows : [];
+        const validWishes = Array.isArray(data.data?.rows)
+          ? data.data?.rows
+          : [];
         setWishes(validWishes);
       } else {
-        setError(data.message || '获取愿望列表失败');
         setWishes([]); // 接口返回错误时，也确保wishes是数组
       }
     } catch (err) {
       console.error('获取愿望列表错误:', err);
-      setError('网络错误，无法加载愿望列表');
       setWishes([]); // 网络错误时，同样确保wishes是数组
     } finally {
       setLoading(false);
@@ -82,30 +86,33 @@ const WishlistPage = () => {
 
   // 删除愿望
   const deleteWish = async (id) => {
-    if (!window.confirm('确定要删除这个愿望吗？')) {
-      return;
-    }
+    Dialog.confirm({
+      content: '确定要删除这个愿望吗？',
+      onConfirm: async () => {
+        try {
+          // 先缓存当前数组（用于回滚）
+          const originalWishes = [...wishes];
+          // 4. 过滤时确保返回数组
+          setWishes((prevWishes) =>
+            prevWishes.filter((wish) => wish.id !== id)
+          );
 
-    try {
-      // 先缓存当前数组（用于回滚）
-      const originalWishes = [...wishes];
-      // 4. 过滤时确保返回数组
-      setWishes((prevWishes) => prevWishes.filter((wish) => wish.id !== id));
+          // 调用接口删除
+          const data = await wish.delete(id, { couple_id });
 
-      // 调用接口删除
-      const data = await wish.delete(id, { couple_id: 1 });
-
-      if (data.code !== 200) {
-        // 接口失败时回滚
-        setWishes(originalWishes);
-        toastFail(data.message);
-      }
-    } catch (error) {
-      console.error('删除愿望错误:', error);
-      // 网络错误时回滚
-      setWishes(wishes.filter((wish) => wish.id !== id));
-      toastFail(error.message || '网络错误，删除失败');
-    }
+          if (data.code !== 200) {
+            // 接口失败时回滚
+            setWishes(originalWishes);
+            toastFail(data.message);
+          }
+        } catch (error) {
+          console.error('删除愿望错误:', error);
+          // 网络错误时回滚
+          setWishes(wishes.filter((wish) => wish.id !== id));
+          toastFail(error.message || '网络错误，删除失败');
+        }
+      },
+    });
   };
 
   // 筛选逻辑：5. 先判断wishes是否为数组，再执行filter
@@ -179,9 +186,7 @@ const WishlistPage = () => {
         {/* 愿望列表 */}
         <div className="wish-list">
           {filteredWishes.length === 0 ? (
-            <div className="empty-state">
-              <p>还没有愿望呢～</p>
-            </div>
+            <EmptyState marginTop={0} />
           ) : (
             filteredWishes.map((wishItem) => (
               // 6. 变量名改为wishItem，避免与引入的api模块名（wish）冲突

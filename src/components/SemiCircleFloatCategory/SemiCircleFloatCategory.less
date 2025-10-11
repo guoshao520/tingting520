@@ -1,0 +1,119 @@
+// 核心样式：左侧中间定位 + 半圆按钮
+.semi-circle-container {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+// 半圆按钮（未展开状态）
+.semi-circle-btn {
+  width: 1.0667rem;
+  height: 1.28rem;
+  border: none;
+  background: #fff;
+  border-radius: 0 0.64rem 0.64rem 0;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+// 展开状态：按钮变为左上半圆，位置调整到列表右上角
+.semi-circle-btn.expanded {
+  border-radius: 0 0.64rem 0.64rem 0;
+  position: absolute;
+  top: 0;
+  right: -1.0667rem;
+}
+
+// 箭头图标（核心视觉元素）
+.arrow-icon {
+  display: block;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-right: 3px solid var(--primary-color);
+  border-top: 3px solid var(--primary-color);
+  transform: rotate(45deg);
+  position: absolute;
+  left: 0.2667rem;
+  top: 0.48rem;
+  transition: transform 0.3s ease;
+}
+
+// 展开状态箭头朝左
+.semi-circle-btn.expanded .arrow-icon {
+  transform: rotate(-135deg);
+  left: 0.4267rem;
+  top: 0.48rem;
+}
+
+// 分类列表面板（展开时显示）
+.category-panel {
+  background: #fff;
+  box-shadow: 0.0533rem 0 0.4267rem rgba(0, 0, 0, 0.08);
+  min-width: 4rem;
+  padding: 0.32rem;
+  margin-left: 0;
+  transform-origin: left center;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 1;
+}
+
+// 展开动画
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0.8) translateX(-0.2667rem);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1) translateX(0);
+  }
+}
+
+// 分类列表样式
+.category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// 分类项样式
+.category-item,
+.category-button {
+  padding: 0.32rem 0.4267rem;
+  margin-bottom: 0.1067rem;
+  border-radius: 0.2133rem;
+  color: #555;
+  font-size: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-item.active,
+.category-button.active {
+  background: #e6fffa;
+  color: #0d9488;
+  font-weight: 500;
+  box-shadow: 0 0.0533rem 0.2133rem rgba(54, 207, 201, 0.15);
+}
+
+.category-item {
+  &:hover {
+    background: #f0fdfa;
+    color: #36cfc9;
+  }
+}
+
+// 空状态提示
+.empty-tip {
+  padding: 1.0667rem 0.5333rem;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.3733rem;
+  line-height: 1.6;
+}

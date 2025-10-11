@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,7 +6,7 @@ import {
   Link,
   useLocation,
   useNavigate,
-} from 'react-router-dom'
+} from 'react-router-dom';
 import {
   FaHeart,
   FaCalendar,
@@ -22,58 +22,71 @@ import {
   FaComment,
   FaClock,
   FaCheck,
-} from 'react-icons/fa'
-import { Image, ImageViewer } from 'antd-mobile'
-import ImagePreview from '@/components/ImagePreview'
-import { importantDates, memories } from '@/data'
-import { calculateDaysFromNow } from '@/utils'
-import proImage from '@/assets/images/first/Image_53712341142431.jpg'
-import memory from '@/api/memory'
-import importantDate from '@/api/importantDate'
-import wish from '@/api/wish' // 引入心愿相关接口
+  FaCog,
+} from 'react-icons/fa';
+import ImagePreview from '@/components/ImagePreview';
+import { calculateDaysFromNow } from '@/utils';
+import memory from '@/api/memory';
+import importantDate from '@/api/importantDate';
+import wish from '@/api/wish'; // 引入心愿相关接口
+import { getLoginInfo } from '@/utils/storage';
 
 function ProfilePage() {
-  const navigate = useNavigate()
-  const count = calculateDaysFromNow('2024-06-30')
-  const [memories, setMemories] = useState([])
-  const [importantDates, setImportantDates] = useState([])
-  const [wishs, setWishs] = useState([])
-  const imgList = ['https://picsum.photos/800/600?1']
+  const navigate = useNavigate();
+  const count = calculateDaysFromNow('2024-06-30');
+  const [memories, setMemories] = useState([]);
+  const [importantDates, setImportantDates] = useState([]);
+  const [wishs, setWishs] = useState([]);
+  const [info, setInfo] = useState({});
+  const imgList = [
+    window._config.DOMAIN_URL + 'photos/Image_53712341142431-1759308638455.jpg',
+  ];
 
   function wishList() {
-    navigate('/wish-list')
+    navigate('/wish-list');
   }
 
+  function setCenter() {
+    navigate('/set');
+  }
+
+  const loginInfo = getLoginInfo()
+  const couple_id = loginInfo?.couple?.id
+
   async function getMemoriesList() {
-    const { data } = await memory.list({ couple_id: 1 })
-    setMemories(data.rows || [])
+    const { data } = await memory.list({ couple_id });
+    setMemories(data?.rows || []);
   }
 
   async function getImportantDatesList() {
-    const { data } = await importantDate.list({ couple_id: 1 })
-    setImportantDates(data || [])
+    const { data } = await importantDate.list({ couple_id });
+    setImportantDates(data || []);
   }
 
   async function getWishList() {
-    const { data } = await wish.list({ couple_id: 1, is_completed: true })
-    setWishs(data.rows || [])
+    const { data } = await wish.list({ couple_id, is_completed: true });
+    setWishs(data?.rows || []);
   }
 
   useEffect(() => {
-    getMemoriesList()
-    getImportantDatesList()
-    getWishList()
-  }, [])
+    const loginInfo = getLoginInfo();
+    setInfo(loginInfo);
+    getMemoriesList();
+    getImportantDatesList();
+    getWishList();
+  }, []);
 
   return (
     <div className="page">
       <div className="profile-header">
         <div className="profile-avatar">
-          <ImagePreview image={imgList[0]} />
+          {info?.user?.avatar && (
+            <ImagePreview image={info?.user?.avatar || ''} />
+          )}
         </div>
         <div className="profile-info">
-          <h2>郭步 & 李婷婷</h2>
-          <p>在一起 {count} 天</p>
+          <h2>{info?.user?.nickname || '-'}</h2>
+          <p>{info?.user?.sex === 1 ? '男' : '女'}</p>
         </div>
       </div>
 
@@ -102,9 +115,18 @@ function ProfilePage() {
           </div>
           <span>心愿清单</span>
         </div>
+        <div className="menu-item" onClick={setCenter}>
+          <div
+            className="menu-icon"
+            style={{ background: 'rgba(255, 165, 0, 0.1)' }}
+          >
+            <FaCog style={{ color: '#FFA500' }} />
+          </div>
+          <span>设置中心</span>
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default ProfilePage
+export default ProfilePage;

@@ -14,10 +14,15 @@ import {
   FaUser,
   FaBell,
   FaMoon,
-  FaAngleRight
+  FaAngleRight,
+  FaQuestionCircle,
+  FaKey
 } from 'react-icons/fa'
 import './SettingsPage.less'
 import TopNavBar from '@/components/TopNavBar'
+import { removeLocal } from '@/utils/storage';
+import { Dialog } from 'antd-mobile';
+import { toastMsg } from '@/utils/toast'
 
 const SettingsPage = ({ onBack, onLogout }) => {
   const navigate = useNavigate()
@@ -27,27 +32,52 @@ const SettingsPage = ({ onBack, onLogout }) => {
   }
 
   const handleLogout = () => {
-    if (window.confirm('确定要退出登录吗？')) {
-      navigate('/login')
-    }
+    Dialog.confirm({
+      content: '确定要退出登录吗？',
+      onConfirm: async () => {
+        removeLocal()
+        navigate('/login')
+      },
+    });
+  }
+
+  const toSafetyIssue = () => {
+    navigate('/set-safety-issue')
+  }
+
+  const toTheme = () => {
+    navigate('/theme')
+  }
+
+  const toUpdatePassword = () => {
+    navigate('/update-password')
+  }
+
+  const leftBack = () => {
+    navigate('/profile')
   }
 
   const menuItems = [
     {
-      icon: <FaMoon />,
-      label: '主题设置',
-      onClick: () => console.log('打开主题设置'),
+      icon: <FaQuestionCircle />,
+      label: '安全问题',
+      onClick: () => toSafetyIssue(),
     },
     {
-      icon: <FaCog />,
-      label: '通用设置',
-      onClick: () => console.log('打开通用设置'),
+      icon: <FaKey />,
+      label: '修改密码',
+      onClick: () => toUpdatePassword(),
     },
+    {
+      icon: <FaMoon />,
+      label: '主题设置',
+      onClick: () => toTheme(),
+    }
   ]
 
   return (
     <div className="settings-container">
-      <TopNavBar title={'设置中心'} />
+      <TopNavBar title={'设置中心'} onBack={leftBack} />
 
       <div className="settings-content">
         <div className="settings-menu">

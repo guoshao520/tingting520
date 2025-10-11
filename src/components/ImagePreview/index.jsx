@@ -1,55 +1,58 @@
-import { useState } from 'react'
-import { Image } from 'antd-mobile'
-import { ImageViewer } from 'antd-mobile' // 注意导入路径（不同版本可能有差异）
+import { useState } from 'react';
+import { Image } from 'antd-mobile';
+import { ImageViewer } from 'antd-mobile';
+import withPreviewWrap from './withPreviewWrap'; // 导入高阶组件
+import './ImagePreview.less';
 
-// 图片预览组组件
-const ImagePreview = ({
-  currIndex, // 当前图片索引
-  image, // 单张图片
-  imageList, // 图片地址数组
-  style = {}, // 缩略图自定义样式
-}) => {
-  const [visible, setVisible] = useState(false)
+// 用高阶组件包装多图预览组件
+const WrappedImageViewer = withPreviewWrap(ImageViewer);
+const WrappedMultiImageViewer = withPreviewWrap(ImageViewer.Multi);
 
-  // 点击缩略图触发预览
+const ImagePreview = ({ currIndex, image, imageList, style = {} }) => {
+  const [visible, setVisible] = useState(false);
+
   const handleThumbClick = () => {
-    setVisible(true)
-  }
+    setVisible(true);
+  };
 
-  // 关闭预览
   const handleClose = () => {
-    setVisible(false)
-  }
+    setTimeout(() => {
+      setVisible(false);
+    }, 100);
+  };
 
   return (
     <>
+      {/* 缩略图 */}
       <Image
         src={image || imageList[currIndex]}
-        onClick={() => handleThumbClick()}
+        onClick={handleThumbClick}
         style={{
           objectFit: 'cover',
-          ...style, // 合并自定义样式
+          ...style,
         }}
       />
-      {visible &&
-        (image ? (
-          <ImageViewer
-            visible={visible}
-            image={image}
-            onClose={handleClose}
-            closeOnMaskClick={true}
-          />
-        ) : (
-          <ImageViewer.Multi
-            visible={visible}
-            images={imageList}
-            defaultIndex={currIndex}
-            onClose={handleClose}
-            closeOnMaskClick={true}
-          />
-        ))}
-    </>
-  )
-}
 
-export default ImagePreview
+      {/* 单图预览：保持原有逻辑 */}
+      {visible && image && (
+        <WrappedImageViewer
+          visible={visible}
+          image={image}
+          onClose={handleClose}
+        />
+      )}
+
+      {/* 多图预览：使用高阶组件包装后的版本 */}
+      {visible && !image && (
+        <WrappedMultiImageViewer
+          visible={visible}
+          images={imageList}
+          defaultIndex={currIndex}
+          onClose={handleClose}
+        />
+      )}
+    </>
+  );
+};
+
+export default ImagePreview;

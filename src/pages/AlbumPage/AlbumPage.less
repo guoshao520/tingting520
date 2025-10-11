@@ -1,106 +1,155 @@
-/* 年份选择器 */
-.year-selector {
+/* 新增：页面基础样式 - 给顶部悬浮导航栏预留高度，避免内容被遮挡 */
+.page {
+  padding-top: 1.4933rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 新增：滚动时导航栏显示阴影 - 增强悬浮层次感 */
+.album-header.show-shadow {
+  box-shadow: 0 0.0533rem 0.2133rem rgba(0, 0, 0, 0.08);
+}
+
+/* 新增：导航栏标题样式 - 适配悬浮布局，避免默认margin */
+.album-header h3 {
+  margin: 0;
+  font-size: 0.4267rem;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 新增：导航栏按钮容器 - 控制按钮间距，与原有按钮样式兼容 */
+.album-header-btn-group {
+  display: flex;
+  gap: 0.2667rem;
+  align-items: center;
+}
+
+/* 原有：批量删除按钮样式 - 完全保留，不修改 */
+.default-btn {
+  padding: 0.16rem 0.32rem;
+  border: 0.0267rem solid #ddd;
+  border-radius: 0.1067rem;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  margin-bottom: 0.427rem;
-  background: #f8f9fa;
-  border-radius: 0.32rem;
-  font-size: 0.4rem;
+  gap: 0.1067rem;
+  transition: all 0.2s;
 
-  .year-label {
-    font-weight: 600;
-    margin-right: 0.4rem;
-    color: #333;
+  &:hover {
+    border-color: #ccc;
+    background-color: #f5f5f5;
   }
 
-  .year-buttons {
-    display: flex;
-    gap: 0.267rem;
-    flex-wrap: wrap;
-
-    .year-btn {
-      padding: 0.213rem 0.427rem;
-      border: 0.053rem solid #e9ecef;
-      background: white;
-      border-radius: 0.533rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 500;
-
-      &:hover {
-        border-color: #ff6b8b;
-        color: #ff6b8b;
-      }
-
-      &.active {
-        background: #ff6b8b;
-        color: white;
-        border-color: #ff6b8b;
-      }
-    }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
-/* 相册统计 */
-.album-stats {
-  margin-bottom: 0.533rem;
-  padding: 0 0.133rem;
+/* 原有：危险按钮样式 - 完全保留，不修改 */
+.danger-btn {
+  padding: 0.16rem 0.32rem;
+  border: none;
+  border-radius: 0.1067rem;
+  background-color: #ff4d4f;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.1067rem;
+  transition: all 0.2s;
 
-  p {
-    color: #666;
-    font-size: 0.373rem;
+  &:hover {
+    background-color: #f5222d;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
-/* 相册网格 */
+/* 原有：批量删除操作栏 - 完全保留，不修改 */
+.batch-delete-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2133rem 0.4267rem;
+  background-color: #ffffff;
+  position: fixed;
+  top: 0.35rem;
+  z-index: 10;
+  width: 100%;
+  span {
+    display: inline-block;
+    line-height: 0.85rem;
+  }
+}
+
+/* 原有：相册网格 - 完全保留，不修改 */
 .album-grid {
+  gap: 0.4267rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
-  gap: 0.32rem;
-  margin-top: 0.533rem;
+  // grid-template-columns: repeat(auto-fill, minmax(3.2rem, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: calc(1.6rem - 0.427rem + 0.32rem);
+}
 
-  .album-item {
-    position: relative;
-    aspect-ratio: 1/1;
-    border-radius: 0.32rem;
-    overflow: hidden;
-    box-shadow: 0 0.053rem 0.213rem rgba(0, 0, 0, 0.1);
+.top-spacing {
+  margin-top: calc(2.5rem - 0.427rem + 0.32rem);
+}
 
-    &:hover {
-      /* transform: translateY(-0.107rem); */
-    }
+/* 原有：相册项 - 完全保留，不修改 */
+.album-item {
+  position: relative;
+  border-radius: 0.2133rem;
+  overflow: hidden;
+  cursor: default;
+  transition: opacity 0.2s;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  &.delete-mode {
+    cursor: pointer;
 
-    .image-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
-      padding: 0.267rem;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-
-      .image-date {
-        color: white;
-        font-size: 0.32rem;
-      }
-    }
-
-    &:hover .image-overlay {
-      opacity: 1;
+    &:not(.selected) {
+      opacity: 0.7;
     }
   }
 }
 
-/* 加载状态 */
-.loading {
-  text-align: center;
-  padding: 1.067rem;
-  color: #666;
+/* 原有：勾选框 - 完全保留，不修改 */
+.photo-checkbox {
+  position: absolute;
+  top: 0.2133rem;
+  left: 0.2133rem;
+  z-index: 10;
+  width: 0.5333rem;
+  height: 0.5333rem;
+  border-radius: 0.1067rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &.selected {
+    border: 0.0533rem solid #ff4d4f;
+    background-color: #ff4d4f;
+
+    .check-icon {
+      display: block;
+      color: #fff;
+      font-size: 0.32rem;
+    }
+  }
+
+  &.unselected {
+    border: 0.0533rem solid #fff;
+    background-color: transparent;
+
+    .check-icon {
+      display: none;
+    }
+  }
 }
