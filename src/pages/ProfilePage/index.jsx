@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   FaHeart,
   FaCalendar,
@@ -23,12 +16,13 @@ import {
   FaClock,
   FaCheck,
   FaCog,
+  FaGamepad
 } from 'react-icons/fa';
 import ImagePreview from '@/components/ImagePreview';
 import { calculateDaysFromNow } from '@/utils';
 import memory from '@/api/memory';
 import importantDate from '@/api/importantDate';
-import wish from '@/api/wish'; // 引入心愿相关接口
+import wish from '@/api/wish';
 import { getLoginInfo } from '@/utils/storage';
 
 function ProfilePage() {
@@ -41,6 +35,10 @@ function ProfilePage() {
   const imgList = [
     window._config.DOMAIN_URL + 'photos/Image_53712341142431-1759308638455.jpg',
   ];
+
+  function goToCoupleGames() {
+    navigate('/couple-games/home');
+  }
 
   function wishList() {
     navigate('/wish-list');
@@ -106,6 +104,16 @@ function ProfilePage() {
       </div>
 
       <div className="profile-menu">
+        <div className="menu-item" onClick={goToCoupleGames}>
+          <div
+            className="menu-icon"
+            style={{ background: 'rgba(72, 187, 120, 0.1)' }}
+          >
+            <FaGamepad style={{ color: '#48BB78' }} />
+          </div>
+          <span>情侣小游戏</span>
+        </div>
+        
         <div className="menu-item" onClick={wishList}>
           <div
             className="menu-icon"

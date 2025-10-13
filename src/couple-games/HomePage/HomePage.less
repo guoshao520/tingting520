@@ -1,0 +1,168 @@
+// 页面容器基础样式（与主题页保持一致的外层结构）
+.couple-games-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  box-sizing: border-box;
+  padding-top: 1.4rem;
+  padding-bottom: 2rem;
+}
+
+// 顶部导航栏容器（复用主题页header样式）
+.couple-games-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+// 主体内容区（避开顶部导航栏）
+.couple-games-content {
+  padding: 32px 16px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+// 头部标题区样式（与主题页theme-header风格统一）
+.games-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #86909c;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// 游戏列表容器（网格布局，适配多端）
+.games-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+// 游戏卡片样式
+.game-item {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// 游戏图标容器
+.game-preview {
+  margin-bottom: 16px;
+
+  .game-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// 游戏信息区
+.game-info {
+  width: 100%;
+  text-align: center;
+
+  .game-name {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+
+  .game-desc {
+    font-size: 14px;
+    color: #86909c;
+    line-height: 1.5;
+    margin: 0 0 20px;
+    height: 42px; // 固定高度，避免卡片高度不一致
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // 进入游戏按钮
+  .enter-game-btn {
+    width: 100%;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+}
+
+// 空状态样式（未绑定伴侣时显示）
+.games-empty-state {
+  margin-top: 80px;
+  text-align: center;
+
+  .empty-icon {
+    margin-bottom: 16px;
+  }
+
+  .empty-tip {
+    font-size: 14px;
+    color: #86909c;
+    margin: 0;
+  }
+}
+
+// 响应式适配（小屏幕优化）
+@media (max-width: 768px) {
+  .couple-games-content {
+    padding: 32px 12px 24px;
+  }
+
+  .games-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+  }
+
+  .game-item {
+    padding: 16px;
+  }
+
+  .game-preview .game-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .game-info .game-name {
+    font-size: 16px;
+  }
+
+  .game-info .game-desc {
+    font-size: 12px;
+    height: 36px;
+  }
+
+  .game-info .enter-game-btn {
+    height: 36px;
+    font-size: 12px;
+  }
+}

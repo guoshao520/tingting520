@@ -5,6 +5,7 @@
      "@/*": ["*"],
      "@/components/*": ["components/*"],
      "@/pages/*": ["pages/*"],
+     "@/couple-games/*": ["couple-games/*"],
      "@/utils/*": ["utils/*"],
      "@/hooks/*": ["hooks/*"],
      "@/assets/*": ["assets/*"],
