@@ -107,3 +107,10 @@ export function calculateDaysUntilBirthday (birthday, options = {}) {
 export function getPlaceholderImage (id, width = 400, height = 300) {
   return `https://picsum.photos/id/${id}/${width}/${height}`;
 };
+
+export function getImgUrl (url) {
+  if (url.indexOf("http") !== -1) {
+    return url
+  }
+  return window._config.DOMAIN_URL + url
+}

@@ -6,20 +6,19 @@ import MemoriesPage from '@/pages/MemoriesPage';
 import MemoriesDetail from '@/pages/MemoriesDetail';
 import ImportantDatesPage from '@/pages/ImportantDatesPage';
 import AlbumPage from '@/pages/AlbumPage';
-import WishesPage from '@/pages/WishesPage';
 import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import UploadPage from '@/pages/UploadPage';
-import AddMemoryPage from '@/pages/AddMemoryPage';
-import AddDatePage from '@/pages/AddDatePage';
+import MemoryForm from '@/pages/MemoryForm';
+import DateForm from '@/pages/DateForm';
 import WishListPage from '@/pages/WishListPage';
-import AddWishPage from '@/pages/AddWishPage';
+import WishForm from '@/pages/WishForm';
 import SetSafetyIssuePage from '@/pages/SetSafetyIssuePage';
 import RetrievePasswordPage from '@/pages/RetrievePasswordPage';
 import UpdatePasswordPage from '@/pages/UpdatePasswordPage';
 import ThemePage from '@/pages/ThemePage';
 import ClassifysPage from '@/pages/ClassifysPage';
-import AddClassifyPage from '@/pages/AddClassifyPage';
+import ClassifyForm from '@/pages/ClassifyForm';
 import BottomNavigation from '@/components/BottomNavigation';
 
 // 1. 全局导航ref（供外部调用）
@@ -40,20 +39,19 @@ export const routeConfig = [
   { path: "/memories/:id", element: <MemoriesDetail />, showLayout: true },
   { path: "/dates", element: <ImportantDatesPage />, showLayout: true },
   { path: "/album", element: <AlbumPage />, showLayout: true },
-  { path: "/wishes", element: <WishesPage />, showLayout: true },
   { path: "/profile", element: <ProfilePage />, showLayout: true },
   { path: "/set", element: <SettingsPage />, showLayout: true },
   { path: "/upload", element: <UploadPage />, showLayout: true },
-  { path: "/add-memory", element: <AddMemoryPage />, showLayout: true },
-  { path: "/add-date", element: <AddDatePage />, showLayout: true },
+  { path: "/memory-form", element: <MemoryForm />, showLayout: true },
+  { path: "/date-form", element: <DateForm />, showLayout: true },
   { path: "/wish-list", element: <WishListPage />, showLayout: true },
-  { path: "/add-wish", element: <AddWishPage />, showLayout: true },
+  { path: "/wish-form", element: <WishForm />, showLayout: true },
   { path: "/set-safety-issue", element: <SetSafetyIssuePage />, showLayout: true },
   { path: "/retrieve-password", element: <RetrievePasswordPage />, showLayout: true },
   { path: "/update-password", element: <UpdatePasswordPage />, showLayout: true },
   { path: "/theme", element: <ThemePage />, showLayout: true },
   { path: "/classifys", element: <ClassifysPage />, showLayout: true },
-  { path: "/add-classify", element: <AddClassifyPage />, showLayout: true },
+  { path: "/classify-form", element: <ClassifyForm />, showLayout: true },
 ];
 
 // 4. 布局组件（包含滚动处理）

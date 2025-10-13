@@ -15,6 +15,7 @@ import {
   FaClock,
   FaCheck
 } from 'react-icons/fa';
+import { getImgUrl } from '@/utils';
 
 function MemoryCard({ memory }) {
   const [liked, setLiked] = useState(false);
@@ -23,7 +24,7 @@ function MemoryCard({ memory }) {
   return (
     <div className="memory-card">
       {memory.image && <div className="memory-image">
-        <img src={window._config.DOMAIN_URL + memory.image} alt={memory.title} />
+        <img src={getImgUrl(memory.image)} alt={memory.title} />
         {memory.memory_date && <div className="memory-date">{memory.memory_date}</div>}
       </div>}
       <div className="memory-content">

@@ -92,7 +92,7 @@
     .image-grid {
       display: grid;
       // grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.4267rem;
 
       .image-item {
@@ -119,4 +119,62 @@
       }
     }
   }
+}
+
+// 图片删除按钮核心样式
+.image-preview-container {
+  position: relative; // 父容器必须为相对定位，确保按钮定位正确
+}
+
+.image-delete-btn {
+  // 定位：右上角悬浮
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10; // 确保按钮在图片上层
+
+  // 尺寸与形状：圆形按钮
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+
+  // 配色与阴影：红色背景+白色图标，带轻微阴影增强层次感
+  background-color: #ff4d4f;
+  color: #fff;
+  box-shadow: 0 0.0533rem 0.16rem rgba(0, 0, 0, 0.15);
+
+  // 内部图标居中
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // 交互样式
+  border: none; // 清除默认边框
+  cursor: pointer;
+  opacity: 0; // 默认隐藏，hover时显示
+  transition: all 0.3s ease; // 过渡动画，提升交互流畅度
+
+  // 聚焦状态优化（清除默认聚焦边框）
+  &:focus {
+    outline: none;
+  }
+
+  // 禁用状态（可选，如需处理不可删除场景）
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// 鼠标hover图片时显示按钮（配套交互，需保留）
+.image-preview-container:hover .image-delete-btn {
+  opacity: 1;
+  // hover时轻微放大，增强交互反馈（可选）
+  transform: scale(1.05);
+}
+
+// 按钮点击时缩小反馈（可选，增强点击感）
+.image-delete-btn:active {
+  transform: scale(0.95);
 }

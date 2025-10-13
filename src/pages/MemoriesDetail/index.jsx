@@ -17,6 +17,7 @@ import './MemoriesDetail.less';
 import memory from '@/api/memory';
 import TopNavBar from '@/components/TopNavBar';
 import ImagePreview from '@/components/ImagePreview';
+import { getImgUrl } from '@/utils';
 
 const MemoryDetail = () => {
   const { id } = useParams(); // 获取URL中的id参数
@@ -74,7 +75,7 @@ const MemoryDetail = () => {
 
   // 处理预览图片列表：格式化为 ImageViewer 所需的数组（仅包含图片URL）
   const previewImageList = memoryData.images.map(
-    (item) => window._config.DOMAIN_URL + item.image_url
+    (item) => getImgUrl(item.image_url)
   );
 
   console.log('previewImageList', previewImageList);
@@ -86,17 +87,9 @@ const MemoryDetail = () => {
       <div className="memory-content">
         <div className="memory-hero">
           <div className="image-gallery">
-            {/* 主图：点击打开预览 */}
-            {/* <img
-              src={window._config.DOMAIN_URL + (memoryData.images[currentImageIndex]?.image_url || '')}
-              alt={memoryData.title || '回忆图片'}
-              className="main-image"
-              onClick={openViewer} // 点击主图触发预览
-              style={{ cursor: memoryData.images.length > 0 ? 'pointer' : 'default' }} // 有图片时显示指针光标
-            /> */}
             <ImagePreview
               currIndex={currentImageIndex}
-              imageList={memoryData.images.map(v => window._config.DOMAIN_URL + v.image_url)}
+              imageList={memoryData.images.map(v => getImgUrl(v.image_url))}
             />
 
             {/* 原有轮播控制按钮 */}

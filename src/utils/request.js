@@ -205,4 +205,4 @@ export const noInterfaceHttp = {
   request,
 };
 
-export default noInterfaceHttp;
+export default http;

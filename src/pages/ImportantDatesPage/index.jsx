@@ -15,8 +15,9 @@ import {
   FaComment,
   FaClock,
   FaCheck,
-  FaTrashAlt,  // 新增删除图标
-  FaTimes       // 新增关闭图标
+  FaTrashAlt,
+  FaTimes,
+  FaEdit // 新增编辑图标
 } from 'react-icons/fa'
 import { calculateDaysUntilBirthday } from '@/utils'
 import importantDate from '@/api/importantDate'
@@ -26,14 +27,18 @@ import { getLoginInfo } from '@/utils/storage'
 function ImportantDatesPage() {
   const navigate = useNavigate()
   const [importantDates, setImportantDates] = useState([])
-  // 1. 管理删除弹窗状态
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [currentDeleteId, setCurrentDeleteId] = useState(null)
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 })
 
+  // 1. 新增：编辑重要日子方法（跳转到表单页并携带ID）
+  const editDate = (dateId) => {
+    navigate(`/date-form?id=${dateId}`); // 与DateForm的编辑路由匹配
+  }
+
   // 添加重要日子（原有逻辑）
   function addDates() {
-    navigate('/add-date')
+    navigate('/date-form')
   }
 
   // 获取重要日子列表（原有逻辑）
@@ -48,11 +53,9 @@ function ImportantDatesPage() {
     }
   }
 
-  // 2. 长按事件处理（PC端右键 + 移动端触摸）
+  // 长按事件处理（PC端右键 + 移动端触摸）
   const handleLongPress = (e, dateId) => {
-    // 阻止浏览器默认右键菜单
     e.preventDefault();
-    // 记录要删除的ID和弹窗位置
     setCurrentDeleteId(dateId);
     setModalPosition({
       top: `${e.clientY}px`,
@@ -61,21 +64,18 @@ function ImportantDatesPage() {
     setDeleteModalVisible(true);
   }
 
-  // 3. 取消删除
+  // 取消删除
   const handleCancelDelete = () => {
     setDeleteModalVisible(false);
     setCurrentDeleteId(null);
   }
 
-  // 4. 确认删除
+  // 确认删除
   const handleConfirmDelete = async () => {
     if (!currentDeleteId) return;
     try {
-      // 调用删除接口（根据实际API调整）
       await importantDate.delete(currentDeleteId);
-      // 更新本地列表
       setImportantDates(prev => prev.filter(date => date.id !== currentDeleteId));
-      // 关闭弹窗
       setDeleteModalVisible(false);
       setCurrentDeleteId(null);
     } catch (error) {
@@ -104,17 +104,19 @@ function ImportantDatesPage() {
             <div
               key={date.id}
               className="date-list-item"
-              style={{ borderLeftColor: date.color }}
-              // 5. 绑定长按事件（PC端右键）
+              style={{ 
+                borderLeftColor: date.color,
+                display: 'flex', // 新增：让内容与编辑按钮横向排列
+                alignItems: 'center', // 新增：垂直居中对齐
+                padding: '16px' // 可根据原有样式调整，确保空间足够
+              }}
               onContextMenu={(e) => handleLongPress(e, date.id)}
-              // 6. 移动端触摸长按支持（300ms以上视为长按）
               onTouchStart={(e) => {
-                date.touchStartTime = Date.now(); // 记录触摸开始时间
+                date.touchStartTime = Date.now();
               }}
               onTouchEnd={(e) => {
                 const touchDuration = Date.now() - date.touchStartTime;
                 if (touchDuration >= 300) {
-                  // 模拟长按事件
                   const touch = e.changedTouches[0];
                   handleLongPress({
                     preventDefault: () => {},
@@ -124,20 +126,34 @@ function ImportantDatesPage() {
                 }
               }}
             >
-              <div className="date-info">
+              {/* 日期信息区域（占满剩余空间） */}
+              <div className="date-info" style={{ flex: 1 }}>
                 <h4>{date.title}</h4>
                 <p>{date.day_date}</p>
               </div>
-              <div className="days-left">
+              
+              {/* 剩余天数区域 */}
+              <div className="days-left" style={{ margin: '0 16px' }}>
                 <span>{calculateDaysUntilBirthday(date.day_date)}</span>
                 <span>天</span>
               </div>
+              
+              {/* 2. 新增：编辑按钮（参照MemoriesPage样式） */}
+              <button
+                className="edit-btn"
+                onClick={(e) => {
+                  e.stopPropagation(); // 阻止事件冒泡到父元素（避免触发长按/点击其他逻辑）
+                  editDate(date.id); // 调用编辑方法
+                }}
+              >
+                <FaEdit />
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 7. 长按删除确认弹窗 */}
+      {/* 长按删除确认弹窗 */}
       {deleteModalVisible && (
         <div
           className="long-press-modal"
@@ -145,7 +161,7 @@ function ImportantDatesPage() {
             position: 'fixed',
             top: modalPosition.top,
             left: modalPosition.left,
-            transform: 'translate(-50%, -100%)', // 向上对齐长按位置
+            transform: 'translate(-50%, -100%)',
             backgroundColor: '#fff',
             borderRadius: '8px',
             boxShadow: '0 2px 10px rgba(0,0,0,0.2)',

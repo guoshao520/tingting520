@@ -1,171 +1,337 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaTrashAlt, FaTimes, FaTrash } from 'react-icons/fa';
-import './AlbumPage.less';
-import photos from '@/api/photos';
-import EmptyState from '@/components/EmptyState';
-import ImagePreview from '@/components/ImagePreview';
-import SemiCircleFloatCategory from '@/components/SemiCircleFloatCategory';
-import { toastMsg, toastSuccess, toastFail } from '@/utils/toast';
-import { Dialog } from 'antd-mobile';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  FaPlus,
+  FaTrashAlt,
+  FaTimes,
+  FaTrash,
+  FaEdit,
+  FaTag,
+  FaCheck,
+} from 'react-icons/fa'
+import './AlbumPage.less'
+import photos from '@/api/photos'
+import photo_category from '@/api/photo_category'
+import EmptyState from '@/components/EmptyState'
+import ImagePreview from '@/components/ImagePreview'
+import SemiCircleFloatCategory from '@/components/SemiCircleFloatCategory'
+import { toastMsg, toastSuccess, toastFail } from '@/utils/toast'
+import { getLoginInfo } from '@/utils/storage'
 
 function AlbumPage() {
-  const navigate = useNavigate();
-  const [images, setImages] = useState([]); // 预览用的完整图片URL
-  const [originalImages, setOriginalImages] = useState([]); // 原始接口数据（含id）
-  const [deleteMode, setDeleteMode] = useState(false); // 批量删除模式：true=开启，false=关闭
-  const [selectedIds, setSelectedIds] = useState([]); // 已勾选的照片ID集合
-  const [batchDeleteLoading, setBatchDeleteLoading] = useState(false); // 批量删除加载状态
-  const categoryList = [
-    {
-      id: 1,
-      name: "分类1"
-    },
-    {
-      id: 2,
-      name: "分类2"
-    }
-  ]
+  const navigate = useNavigate()
+  const [images, setImages] = useState([]) // 用于展示的图片URL列表
+  const [originalImages, setOriginalImages] = useState([]) // 当前筛选的原始数据
+  const [fullOriginalImages, setFullOriginalImages] = useState([]) // 完整原始数据
+  const [editMode, seteditMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [batchDeleteLoading, setBatchDeleteLoading] = useState(false)
+  const [categoryList, setCategoryList] = useState([])
+  const [currentCategoryId, setCurrentCategoryId] = useState('')
+  const [listLoading, setListLoading] = useState(false)
+  const { couple } = getLoginInfo() || {}
 
-  // 获取照片列表（原有逻辑不变）
-  async function getPhotoList() {
+  // 分类设置相关状态
+  const [setCategoryVisible, setSetCategoryVisible] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [setCategoryLoading, setSetCategoryLoading] = useState(false)
+
+  // 修复：获取照片列表（先更新完整列表，再筛选）
+  async function getPhotoList(categoryId = '') {
+    if (!couple?.id) {
+      toastFail('用户信息异常，请重新登录')
+      return
+    }
+
+    setListLoading(true)
     try {
-      const { data } = await photos.list();
-      setOriginalImages(data || []);
-      const imgs = (data || []).map(
+      const params = {
+        ...(categoryId && { category_id: categoryId }),
+      }
+
+      // 1. 先请求接口获取数据
+      const { data } = await photos.list(params)
+      const responseData = data?.rows || data || [] // 兼容可能的分页结构
+
+      // 2. 更新完整列表（关键修复：先确保完整列表已更新）
+      setFullOriginalImages(responseData)
+
+      // 3. 根据分类筛选当前需要显示的列表
+      const filteredImages = categoryId
+        ? responseData.filter((img) => img.category_id === categoryId)
+        : responseData
+
+      // 4. 更新当前视图数据
+      setOriginalImages(filteredImages)
+      const formattedImages = filteredImages.map(
         (v) => window._config.DOMAIN_URL + v.image_url
-      );
-      setImages(imgs || []);
+      )
+      setImages(formattedImages)
+      seteditMode(false)
     } catch (error) {
-      console.error('获取相册列表失败:', error);
-      toastFail('获取相册失败，请重试');
+      console.error('获取相册列表失败:', error)
+      toastFail('获取相册失败，请重试')
+      setOriginalImages([])
+      setFullOriginalImages([])
+      setImages([])
+    } finally {
+      setListLoading(false)
     }
   }
 
+  // 初始化：获取分类列表 + 加载默认照片列表
   useEffect(() => {
-    getPhotoList();
-    // 退出页面时重置批量删除状态（避免缓存状态）
-    return () => {
-      setDeleteMode(false);
-      setSelectedIds([]);
-    };
-  }, []);
+    const fetchCategories = async () => {
+      try {
+        const { code, data } = await photo_category.list()
+        if (code === 200 && Array.isArray(data)) {
+          const fullCategoryList = [{ id: '', name: '全部' }, ...data]
+          setCategoryList(fullCategoryList)
+        } else {
+          toastFail('获取分类列表失败')
+          setCategoryList([{ id: '', name: '全部' }])
+        }
+      } catch (error) {
+        console.error('获取分类列表异常:', error)
+        toastFail('分类加载失败，请重试')
+        setCategoryList([{ id: '', name: '全部' }])
+      }
+    }
 
-  // 跳转添加照片（原有逻辑不变）
+    fetchCategories()
+    getPhotoList() // 初始加载完整列表
+  }, [couple?.id])
+
+  // 跳转添加照片
   function addAlbum() {
-    navigate('/upload');
+    navigate('/upload')
   }
 
-  // 切换批量删除模式：开启/关闭
-  const toggleDeleteMode = () => {
-    if (deleteMode) {
-      // 从「批量删除」切换到「取消删除」：清空已选
-      setSelectedIds([]);
+  // 切换批量操作模式
+  const toggleeditMode = () => {
+    if (editMode) {
+      setSelectedIds([])
     }
-    setDeleteMode(!deleteMode);
-  };
+    seteditMode(!editMode)
+  }
 
   // 勾选/取消勾选单张照片
   const handleImageSelect = (e, photoId) => {
-    e.stopPropagation(); // 防止触发图片预览
+    e.stopPropagation()
     setSelectedIds((prev) => {
       if (prev.includes(photoId)) {
-        // 已勾选：移除
-        return prev.filter((id) => id !== photoId);
+        return prev.filter((id) => id !== photoId)
       } else {
-        // 未勾选：添加
-        return [...prev, photoId];
+        return [...prev, photoId]
       }
-    });
-  };
+    })
+  }
 
-  // 批量删除确认
+  // 批量删除
   const handleBatchDelete = async () => {
     if (selectedIds.length === 0) {
-      toastMsg('请先勾选要删除的照片');
-      return;
+      toastMsg('请先勾选要删除的照片')
+      return
     }
 
-    Dialog.confirm({
-      content: '确定要删除选中的 ' + selectedIds.length + ' 张照片吗？',
-      onConfirm: async () => {
-        setBatchDeleteLoading(true);
-        try {
-          // 调用批量删除接口（若接口支持批量，推荐传数组；若仅支持单删，循环调用）
-          // 这里假设接口支持批量删除：photos.batchDelete({ ids: selectedIds })
-          await photos.batchDelete({ ids: selectedIds });
+    if (window.confirm(`确定要删除选中的 ${selectedIds.length} 张照片吗？`)) {
+      setBatchDeleteLoading(true)
+      try {
+        await photos.batchDelete({ ids: selectedIds })
 
-          // 本地列表更新：过滤掉已删除的照片
-          const newOriginalImages = originalImages.filter(
-            (img) => !selectedIds.includes(img.id)
-          );
-          const newImages = newOriginalImages.map(
-            (v) => window._config.DOMAIN_URL + v.image_url
-          );
+        // 更新完整列表
+        const updatedFullImages = fullOriginalImages.filter(
+          (img) => !selectedIds.includes(img.id)
+        )
+        setFullOriginalImages(updatedFullImages)
 
-          setOriginalImages(newOriginalImages);
-          setImages(newImages);
-          setSelectedIds([]); // 清空已选
-          toastSuccess('成功删除 ' + selectedIds.length + ' 张照片');
-        } catch (error) {
-          console.error('批量删除照片失败:', error);
-          toastFail('删除失败，请稍后重试');
-        } finally {
-          setBatchDeleteLoading(false);
-        }
-      },
-    });
-  };
+        // 刷新当前筛选列表
+        const filteredImages = currentCategoryId
+          ? updatedFullImages.filter(
+              (img) => img.category_id === currentCategoryId
+            )
+          : updatedFullImages
+        setOriginalImages(filteredImages)
 
-  // 根据分类筛选
-  const filterList = (id) => {
-    console.log("id >>>>", id)
+        const newImages = filteredImages.map(
+          (v) => window._config.DOMAIN_URL + v.image_url
+        )
+        setImages(newImages)
+
+        setSelectedIds([])
+        toastSuccess(`成功删除 ${selectedIds.length} 张照片`)
+      } catch (error) {
+        console.error('批量删除照片失败:', error)
+        toastFail('删除失败，请稍后重试')
+      } finally {
+        setBatchDeleteLoading(false)
+      }
+    }
+  }
+
+  // 批量设置分类
+  const handleBatchSetCategory = async () => {
+    if (selectedIds.length === 0) {
+      toastMsg('请先勾选要设置分类的照片')
+      setSetCategoryVisible(false)
+      return
+    }
+    if (!selectedCategoryId) {
+      toastMsg('请选择目标分类')
+      return
+    }
+
+    setSetCategoryLoading(true)
+    try {
+      await photos.batchSetCategory({
+        photo_ids: selectedIds,
+        category_id: selectedCategoryId,
+      })
+
+      // 更新完整列表的分类信息
+      const updatedFullImages = fullOriginalImages.map((img) =>
+        selectedIds.includes(img.id)
+          ? { ...img, category_id: selectedCategoryId }
+          : img
+      )
+      setFullOriginalImages(updatedFullImages)
+
+      // 刷新当前筛选列表
+      const filteredImages = currentCategoryId
+        ? updatedFullImages.filter(
+            (img) => img.category_id === currentCategoryId
+          )
+        : updatedFullImages
+      setOriginalImages(filteredImages)
+
+      const formattedImages = filteredImages.map(
+        (v) => window._config.DOMAIN_URL + v.image_url
+      )
+      setImages(formattedImages)
+
+      toastSuccess(`成功为 ${selectedIds.length} 张照片设置分类`)
+      setSelectedIds([])
+      setSetCategoryVisible(false)
+      setSelectedCategoryId('')
+    } catch (error) {
+      console.error('批量设置分类失败:', error)
+      toastFail('设置分类失败，请稍后重试')
+    } finally {
+      setSetCategoryLoading(false)
+    }
+  }
+
+  // 取消设置分类
+  const handleCancelSetCategory = () => {
+    setSetCategoryVisible(false)
+  }
+
+  // 根据分类筛选照片
+  const filterList = (categoryId) => {
+    setCurrentCategoryId(categoryId)
+    getPhotoList(categoryId) // 筛选时重新请求对应分类的数据
   }
 
   return (
     <div className="page">
+      {listLoading && (
+        <div
+          className="list-loading"
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 100,
+            padding: '12px 24px',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            color: '#fff',
+            borderRadius: 8,
+            fontSize: 14,
+          }}
+        >
+          加载中...
+        </div>
+      )}
+
+      {/* 设置分类弹窗 */}
+      {setCategoryVisible && (
+        <div className="edit-modal">
+          <div className="modal-content">
+            <h3>选择分类</h3>
+            <div className="category-list">
+              {categoryList
+                .filter((category) => category.id !== '') // 排除“全部”选项
+                .map((category) => (
+                  <div
+                    key={category.id}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`category-item ${
+                      selectedCategoryId === category.id ? 'selected' : ''
+                    }`}
+                  >
+                    <span>{category.name}</span>
+                    {selectedCategoryId === category.id && (
+                      <FaCheck style={{ marginLeft: 8 }} />
+                    )}
+                  </div>
+                ))}
+            </div>
+            <div className="modal-btns">
+              <button
+                onClick={handleBatchSetCategory}
+                className="primary-btn"
+                disabled={setCategoryLoading}
+              >
+                {setCategoryLoading ? '设置中...' : '确认设置'}
+              </button>
+              <button onClick={handleCancelSetCategory} className="cancel-btn">
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="section">
-        {/* 头部：新增「批量删除/取消删除」按钮 */}
         <div
           className="section-header"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            padding: '0 16px',
+            marginBottom: '1.3rem',
           }}
         >
           <h3>我们的相册</h3>
           <div style={{ display: 'flex', gap: 12 }}>
-            {/* 原有添加照片按钮 */}
             <button
               className="primary-btn"
               onClick={addAlbum}
-              disabled={deleteMode} // 批量删除模式下禁用添加
-              style={{ opacity: deleteMode ? 0.6 : 1 }}
+              disabled={editMode || listLoading}
+              style={{ opacity: editMode || listLoading ? 0.6 : 1 }}
             >
               <FaPlus /> 添加照片
             </button>
-            {/* 新增：批量删除/取消删除 切换按钮 */}
             <button
-              className={`${deleteMode ? 'danger-btn' : 'default-btn'}`}
-              onClick={toggleDeleteMode}
-              disabled={images.length === 0} // 无照片时禁用
+              className={`${editMode ? 'danger-btn' : 'default-btn'}`}
+              onClick={toggleeditMode}
+              disabled={images.length === 0 || listLoading}
             >
-              {deleteMode ? (
+              {editMode ? (
                 <>
-                  <FaTimes size={14} /> 取消删除
+                  <FaTimes size={14} /> 取消
                 </>
               ) : (
                 <>
-                  <FaTrash size={14} /> 批量删除
+                  <FaEdit size={14} /> 批量操作
                 </>
               )}
             </button>
           </div>
         </div>
-
-        {/* 批量删除模式下：显示已选数量和删除按钮 */}
-        {deleteMode && selectedIds.length > 0 && (
+        {editMode && selectedIds.length > 0 && (
           <div
             className="batch-delete-bar"
             style={{
@@ -174,104 +340,131 @@ function AlbumPage() {
               alignItems: 'center',
               padding: '8px 16px',
               backgroundColor: 'var(--accent-color)',
-              marginTop: '1.3rem',
+              marginTop: '1.22rem',
             }}
           >
             <span style={{ color: '#ff4d4f', fontSize: 14 }}>
               已选中 {selectedIds.length} 张照片
             </span>
-            <button
-              className="danger-btn"
-              onClick={handleBatchDelete}
-              disabled={batchDeleteLoading}
-              style={{
-                marginRight: '0.85rem',
-              }}
-            >
-              {batchDeleteLoading ? (
-                '删除中...'
-              ) : (
-                <>
-                  <FaTrashAlt size={14} /> 确认删除
-                </>
-              )}
-            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                className="default-btn"
+                onClick={() => setSetCategoryVisible(true)}
+                disabled={setCategoryLoading || listLoading}
+              >
+                <FaTag size={14} /> 设置分类
+              </button>
+              <button
+                className="danger-btn"
+                onClick={handleBatchDelete}
+                disabled={batchDeleteLoading || listLoading}
+              >
+                {batchDeleteLoading ? (
+                  '删除中...'
+                ) : (
+                  <>
+                    <FaTrashAlt size={14} /> 删除
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* 空状态（原有逻辑不变） */}
-        <EmptyState showBox={images?.length === 0} />
+        {!listLoading && (
+          <EmptyState
+            showBox={images?.length === 0}
+            tip={
+              currentCategoryId
+                ? '该分类下暂无照片'
+                : '暂无照片，点击添加按钮上传'
+            }
+          />
+        )}
 
-        {/* 相册网格：批量删除模式下显示勾选框 */}
-        <div
-          className={`album-grid ${
-            deleteMode && selectedIds.length > 0 ? 'top-spacing' : ''
-          }`}
-          style={{
-            gap: '0.21333rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-          }}
-        >
-          {images.map((item, index) => {
-            const currentPhoto = originalImages[index] || {};
-            const isSelected = selectedIds.includes(currentPhoto.id); // 是否已勾选
+        {!listLoading && images.length > 0 && (
+          <div
+            className={`album-grid ${
+              editMode && selectedIds.length > 0 ? 'top-spacing' : ''
+            }`}
+            style={{
+              gap: '0.21333rem',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+            }}
+          >
+            {images.map((item, index) => {
+              const currentPhoto = originalImages[index] || {}
+              const isSelected = selectedIds.includes(currentPhoto.id)
 
-            return (
-              <div
-                key={currentPhoto.id || index} // 优先用照片ID作key
-                className="album-item"
-                style={{
-                  position: 'relative',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  cursor: deleteMode ? 'pointer' : 'default',
-                  opacity: deleteMode && !isSelected ? 0.7 : 1, // 未勾选时降低透明度
-                }}
-                onClick={(e) =>
-                  deleteMode && handleImageSelect(e, currentPhoto.id)
-                } // 批量模式下点击卡片勾选
-              >
-                {/* 1. 图片预览（原有逻辑不变，批量模式下可禁用预览） */}
-                <ImagePreview
-                  currIndex={index}
-                  imageList={images}
-                  onClick={(e) => !deleteMode && e.stopPropagation()} // 批量模式下禁用预览
-                  style={{ pointerEvents: deleteMode ? 'none' : 'auto' }} // 批量模式下屏蔽预览交互
-                />
-
-                {/* 2. 批量删除模式下：显示勾选框（默认隐藏） */}
-                {deleteMode && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 8,
-                      zIndex: 10,
-                      width: 20,
-                      height: 20,
-                      borderRadius: 4,
-                      border: isSelected
-                        ? '2px solid #ff4d4f'
-                        : '2px solid #fff',
-                      backgroundColor: isSelected ? '#ff4d4f' : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    onClick={(e) => e.stopPropagation()} // 避免触发卡片点击
-                  >
-                    {isSelected && <FaTimes size={12} color="#fff" />}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={currentPhoto.id || index}
+                  className={`album-item ${editMode ? 'edit-mode' : ''} ${isSelected ? 'selected' : ''}`}
+                  style={{
+                    position: 'relative',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    cursor: editMode ? 'pointer' : 'default',
+                    aspectRatio: '1/1', // 确保图片容器是正方形
+                  }}
+                  onClick={(e) =>
+                    editMode && handleImageSelect(e, currentPhoto.id)
+                  }
+                >
+                  {editMode ? (
+                    <img
+                      src={item}
+                      alt={`相册图片 ${index}`}
+                      className="album-image"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        pointerEvents: editMode ? 'none' : 'auto',
+                      }}
+                      onClick={(e) => !editMode && e.stopPropagation()}
+                    />
+                  ) : (
+                    <ImagePreview currIndex={index} imageList={images} />
+                  )}
+                  {editMode && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        zIndex: 10,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 4,
+                        border: isSelected
+                          ? '2px solid #ff4d4f'
+                          : '2px solid #fff',
+                        backgroundColor: isSelected ? '#ff4d4f' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {isSelected && <FaTimes size={12} color="#fff" />}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
-      <SemiCircleFloatCategory categoryList={categoryList} onSearch={filterList} />
+
+      <SemiCircleFloatCategory
+        categoryList={categoryList}
+        onSearch={filterList}
+        defaultSelectedId={currentCategoryId}
+        disabled={listLoading || editMode}
+      />
     </div>
-  );
+  )
 }
 
-export default AlbumPage;
+export default AlbumPage

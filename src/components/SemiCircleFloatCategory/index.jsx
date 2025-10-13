@@ -26,7 +26,7 @@ import { useNavigate } from 'react-router-dom';
 const SemiCircleFloatCategory = ({ categoryList = [], onSearch }) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false)
-  const [activeId, setActiveId] = useState(null)
+  const [activeId, setActiveId] = useState(0)
 
   // 切换展开/收起
   const toggleExpand = () => {
@@ -54,11 +54,11 @@ const SemiCircleFloatCategory = ({ categoryList = [], onSearch }) => {
             {categoryList.length === 0 ? (
               <li className="empty-tip">暂无分类</li>
             ) : (
-              categoryList.map((item) => (
+              categoryList.map((item, index) => (
                 <li
                   key={item.id}
                   className={`category-item ${
-                    activeId === item.id ? 'active' : ''
+                    activeId === item.id || (activeId === 0 && index === 0) ? 'active' : ''
                   }`}
                   onClick={() => handleCategoryClick(item.id)}
                 >

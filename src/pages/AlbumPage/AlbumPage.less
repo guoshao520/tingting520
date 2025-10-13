@@ -81,7 +81,8 @@
   background-color: #ffffff;
   position: fixed;
   top: 0.35rem;
-  z-index: 10;
+  left: 0;
+  z-index: 100;
   width: 100%;
   span {
     display: inline-block;
@@ -110,10 +111,10 @@
   cursor: default;
   transition: opacity 0.2s;
 
-  &.delete-mode {
+  &.edit-mode {
     cursor: pointer;
 
-    &:not(.selected) {
+    &.selected {
       opacity: 0.7;
     }
   }

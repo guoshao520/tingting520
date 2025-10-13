@@ -10,6 +10,9 @@ const photos = {
   // 更新照片
   update: (id, data) => http.put(`/photo/update/${id}`, data),
 
+  // 批量设置
+  batchSetCategory: (data) => http.post(`/photo/batchSetCategory`, data),
+
   // 删除照片
   delete: (id) => http.delete(`/photo/delete/${id}`),
 

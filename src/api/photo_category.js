@@ -5,7 +5,7 @@ const photo_category = {
   detail: (id) => http.get(`/photo-category/detail/${id}`),
 
   // 创建照片分类
-  create: (data) => http.post('/photo-category/upload', data),
+  create: (data) => http.post('/photo-category/create', data),
 
   // 更新照片分类
   update: (id, data) => http.put(`/photo-category/update/${id}`, data),
