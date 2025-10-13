@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaPlus,
@@ -8,6 +8,8 @@ import {
   FaEdit,
   FaTag,
   FaCheck,
+  FaSpinner,
+  FaLeaf
 } from 'react-icons/fa'
 import './AlbumPage.less'
 import photos from '@/api/photos'
@@ -20,77 +22,122 @@ import { getLoginInfo } from '@/utils/storage'
 
 function AlbumPage() {
   const navigate = useNavigate()
-  const [images, setImages] = useState([]) // 用于展示的图片URL列表
-  const [originalImages, setOriginalImages] = useState([]) // 当前筛选的原始数据
-  const [fullOriginalImages, setFullOriginalImages] = useState([]) // 完整原始数据
+  const { couple } = getLoginInfo() || {}
+
+  // ========== 基础图片状态（保持原有，新增分页逻辑） ==========
+  const [images, setImages] = useState([]) // 用于展示的图片URL列表（合并后）
+  const [originalImages, setOriginalImages] = useState([]) // 当前筛选的原始数据（合并后）
+  const [fullOriginalImages, setFullOriginalImages] = useState([]) // 完整原始数据（合并后）
   const [editMode, seteditMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [batchDeleteLoading, setBatchDeleteLoading] = useState(false)
   const [categoryList, setCategoryList] = useState([])
   const [currentCategoryId, setCurrentCategoryId] = useState('')
-  const [listLoading, setListLoading] = useState(false)
-  const { couple } = getLoginInfo() || {}
+  const [listLoading, setListLoading] = useState(false) // 初始加载/筛选加载状态
 
-  // 分类设置相关状态
+  // ========== 新增：分页加载核心状态 ==========
+  const [page, setPage] = useState(1) // 当前页码（从1开始）
+  const [pageSize] = useState(18) // 每页固定加载18条
+  const [hasMore, setHasMore] = useState(true) // 是否还有更多数据
+  const [loadingMore, setLoadingMore] = useState(false) // 加载更多中状态
+  const scrollRef = useRef(null) // 滚动容器的ref（用于监听滚动）
+
+  // 分类设置相关状态（保持原有）
   const [setCategoryVisible, setSetCategoryVisible] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [setCategoryLoading, setSetCategoryLoading] = useState(false)
 
-  // 修复：获取照片列表（先更新完整列表，再筛选）
-  async function getPhotoList(categoryId = '') {
+  // ========== 改造：分页获取照片列表 ==========
+  /**
+   * 获取照片列表（支持分页+分类筛选）
+   * @param {string} categoryId - 分类ID（可选，筛选用）
+   * @param {boolean} isLoadMore - 是否是“加载更多”（true=追加数据，false=重置数据）
+   */
+  async function getPhotoList(categoryId = '', isLoadMore = false) {
+    // 1. 前置校验：用户信息异常/无更多数据/加载中，直接返回
     if (!couple?.id) {
       toastFail('用户信息异常，请重新登录')
       return
     }
+    if (!isLoadMore && listLoading) return // 初始加载/筛选时，避免重复请求
+    if (isLoadMore && (loadingMore || !hasMore)) return // 加载更多时，避免重复请求/无效请求
 
-    setListLoading(true)
+    // 2. 设置加载状态
+    if (isLoadMore) {
+      setLoadingMore(true) // 加载更多的loading
+    } else {
+      setListLoading(true) // 初始加载/筛选的loading
+      setPage(1) // 筛选新分类时，重置页码为1
+      setHasMore(true) // 筛选新分类时，重置“有更多数据”状态
+    }
+
     try {
+      // 3. 构造请求参数（分页+分类）
       const params = {
+        page: isLoadMore ? page + 1 : 1, // 加载更多=当前页+1，否则=1
+        pageSize: pageSize,
         ...(categoryId && { category_id: categoryId }),
       }
 
-      // 1. 先请求接口获取数据
+      // 4. 调用接口（假设接口返回 { data: { list: [], total: 0 } } 格式）
       const { data } = await photos.list(params)
-      const responseData = data?.rows || data || [] // 兼容可能的分页结构
+      const newData = data?.rows || data || [] // 新请求到的当前页数据
+      const total = data?.total || data.length || 0 // 总数据条数（用于判断是否有更多）
 
-      // 2. 更新完整列表（关键修复：先确保完整列表已更新）
-      setFullOriginalImages(responseData)
+      // 5. 处理数据合并（加载更多=追加，否则=覆盖）
+      if (isLoadMore) {
+        // 加载更多：追加数据
+        const updatedFullImages = [...fullOriginalImages, ...newData]
+        const updatedOriginalImages = [...originalImages, ...newData]
+        const updatedImages = updatedOriginalImages.map(
+          (v) => window._config.DOMAIN_URL + v.image_url
+        )
 
-      // 3. 根据分类筛选当前需要显示的列表
-      const filteredImages = categoryId
-        ? responseData.filter((img) => img.category_id === categoryId)
-        : responseData
+        // 更新状态
+        setFullOriginalImages(updatedFullImages)
+        setOriginalImages(updatedOriginalImages)
+        setImages(updatedImages)
+        setPage(page + 1) // 页码+1
 
-      // 4. 更新当前视图数据
-      setOriginalImages(filteredImages)
-      const formattedImages = filteredImages.map(
-        (v) => window._config.DOMAIN_URL + v.image_url
-      )
-      setImages(formattedImages)
-      seteditMode(false)
+        // 判断是否还有更多数据（当前页数据长度 >= 总条数 → 无更多）
+        setHasMore(updatedOriginalImages.length < total)
+      } else {
+        // 初始加载/筛选：覆盖数据
+        const formattedImages = newData.map(
+          (v) => window._config.DOMAIN_URL + v.image_url
+        )
+
+        // 更新状态
+        setFullOriginalImages(newData)
+        setOriginalImages(newData)
+        setImages(formattedImages)
+
+        // 判断是否还有更多数据（当前页数据长度 >= 总条数 → 无更多）
+        setHasMore(newData.length < total)
+      }
+
+      seteditMode(false) // 加载数据后，重置编辑模式
     } catch (error) {
       console.error('获取相册列表失败:', error)
-      toastFail('获取相册失败，请重试')
-      setOriginalImages([])
-      setFullOriginalImages([])
-      setImages([])
+      toastFail(isLoadMore ? '加载更多失败，请重试' : '获取相册失败，请重试')
     } finally {
-      setListLoading(false)
+      // 6. 关闭加载状态
+      if (isLoadMore) {
+        setLoadingMore(false)
+      } else {
+        setListLoading(false)
+      }
     }
   }
 
-  // 初始化：获取分类列表 + 加载默认照片列表
+  // ========== 改造：初始化+分类筛选（重置分页） ==========
   useEffect(() => {
+    // 1. 获取分类列表（保持原有逻辑）
     const fetchCategories = async () => {
       try {
         const { code, data } = await photo_category.list()
-        if (code === 200 && Array.isArray(data)) {
-          const fullCategoryList = [{ id: '', name: '全部' }, ...data]
-          setCategoryList(fullCategoryList)
-        } else {
-          toastFail('获取分类列表失败')
-          setCategoryList([{ id: '', name: '全部' }])
-        }
+        const fullCategoryList = [{ id: '', name: '全部' }, ...(data || [])]
+        setCategoryList(fullCategoryList)
       } catch (error) {
         console.error('获取分类列表异常:', error)
         toastFail('分类加载失败，请重试')
@@ -99,35 +146,48 @@ function AlbumPage() {
     }
 
     fetchCategories()
-    getPhotoList() // 初始加载完整列表
+    // 2. 初始加载：分类ID为空（全部照片），非加载更多（覆盖数据）
+    getPhotoList('', false)
   }, [couple?.id])
 
-  // 跳转添加照片
-  function addAlbum() {
-    navigate('/upload')
-  }
+  // ========== 新增：滚动监听（触发加载更多） ==========
+  const handleScroll = useCallback(() => {
+    const container = scrollRef.current
+    if (!container) return
 
-  // 切换批量操作模式
-  const toggleeditMode = () => {
-    if (editMode) {
-      setSelectedIds([])
+    // 计算滚动距离：容器高度 + 滚动Top >= 内容高度 - 100（提前100px触发加载，优化体验）
+    const { scrollHeight, clientHeight, scrollTop } = container
+    const isBottom = scrollHeight - clientHeight - scrollTop <= 100
+
+    // 滚动到底部 → 触发加载更多
+    if (isBottom) {
+      getPhotoList(currentCategoryId, true)
     }
-    seteditMode(!editMode)
-  }
+  }, [currentCategoryId, page, hasMore, loadingMore])
 
-  // 勾选/取消勾选单张照片
-  const handleImageSelect = (e, photoId) => {
-    e.stopPropagation()
-    setSelectedIds((prev) => {
-      if (prev.includes(photoId)) {
-        return prev.filter((id) => id !== photoId)
-      } else {
-        return [...prev, photoId]
+  // 监听滚动事件（组件挂载时绑定，卸载时解绑）
+  useEffect(() => {
+    const container = scrollRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+    }
+
+    // 组件卸载时解绑事件，避免内存泄漏
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll)
       }
-    })
+    }
+  }, [handleScroll])
+
+  // ========== 改造：分类筛选（重置分页） ==========
+  const filterList = (categoryId) => {
+    setCurrentCategoryId(categoryId)
+    // 筛选新分类时，重置数据（非加载更多）
+    getPhotoList(categoryId, false)
   }
 
-  // 批量删除
+  // ========== 改造：批量删除（保持逻辑，适配合并后的数据） ==========
   const handleBatchDelete = async () => {
     if (selectedIds.length === 0) {
       toastMsg('请先勾选要删除的照片')
@@ -139,13 +199,13 @@ function AlbumPage() {
       try {
         await photos.batchDelete({ ids: selectedIds })
 
-        // 更新完整列表
+        // 更新完整列表（合并后的数据）
         const updatedFullImages = fullOriginalImages.filter(
           (img) => !selectedIds.includes(img.id)
         )
         setFullOriginalImages(updatedFullImages)
 
-        // 刷新当前筛选列表
+        // 刷新当前筛选列表（合并后的数据）
         const filteredImages = currentCategoryId
           ? updatedFullImages.filter(
               (img) => img.category_id === currentCategoryId
@@ -160,6 +220,13 @@ function AlbumPage() {
 
         setSelectedIds([])
         toastSuccess(`成功删除 ${selectedIds.length} 张照片`)
+        // 删除后，重置页码（避免剩余数据不足一页时，加载更多异常）
+        setPage(1)
+        // 重新判断是否有更多数据（基于删除后的总条数）
+        setHasMore(
+          filteredImages.length <
+            (await photos.list({ category_id: currentCategoryId })).data.total
+        )
       } catch (error) {
         console.error('批量删除照片失败:', error)
         toastFail('删除失败，请稍后重试')
@@ -169,7 +236,7 @@ function AlbumPage() {
     }
   }
 
-  // 批量设置分类
+  // ========== 改造：批量设置分类（保持逻辑，适配合并后的数据） ==========
   const handleBatchSetCategory = async () => {
     if (selectedIds.length === 0) {
       toastMsg('请先勾选要设置分类的照片')
@@ -188,7 +255,7 @@ function AlbumPage() {
         category_id: selectedCategoryId,
       })
 
-      // 更新完整列表的分类信息
+      // 更新完整列表（合并后的数据）
       const updatedFullImages = fullOriginalImages.map((img) =>
         selectedIds.includes(img.id)
           ? { ...img, category_id: selectedCategoryId }
@@ -196,7 +263,7 @@ function AlbumPage() {
       )
       setFullOriginalImages(updatedFullImages)
 
-      // 刷新当前筛选列表
+      // 刷新当前筛选列表（合并后的数据）
       const filteredImages = currentCategoryId
         ? updatedFullImages.filter(
             (img) => img.category_id === currentCategoryId
@@ -213,6 +280,8 @@ function AlbumPage() {
       setSelectedIds([])
       setSetCategoryVisible(false)
       setSelectedCategoryId('')
+      // 设置分类后，重置页码（避免筛选当前分类时数据变化导致加载异常）
+      setPage(1)
     } catch (error) {
       console.error('批量设置分类失败:', error)
       toastFail('设置分类失败，请稍后重试')
@@ -221,19 +290,39 @@ function AlbumPage() {
     }
   }
 
-  // 取消设置分类
+  // ========== 保持原有逻辑：跳转添加/切换编辑模式/取消设置分类 ==========
+  function addAlbum() {
+    navigate('/upload')
+  }
+
+  const toggleeditMode = () => {
+    if (editMode) {
+      setSelectedIds([])
+    }
+    seteditMode(!editMode)
+  }
+
+  const handleImageSelect = (e, photoId) => {
+    e.stopPropagation()
+    setSelectedIds((prev) =>
+      prev.includes(photoId)
+        ? prev.filter((id) => id !== photoId)
+        : [...prev, photoId]
+    )
+  }
+
   const handleCancelSetCategory = () => {
     setSetCategoryVisible(false)
   }
 
-  // 根据分类筛选照片
-  const filterList = (categoryId) => {
-    setCurrentCategoryId(categoryId)
-    getPhotoList(categoryId) // 筛选时重新请求对应分类的数据
-  }
-
+  // ========== 改造：渲染（添加滚动容器+加载更多提示） ==========
   return (
-    <div className="page">
+    <div
+      className="page"
+      ref={scrollRef}
+      style={{ height: '100vh', overflowY: 'auto', paddingBottom: 0 }}
+    >
+      {/* 初始加载/筛选加载提示（保持原有） */}
       {listLoading && (
         <div
           className="list-loading"
@@ -254,14 +343,14 @@ function AlbumPage() {
         </div>
       )}
 
-      {/* 设置分类弹窗 */}
+      {/* 设置分类弹窗（保持原有） */}
       {setCategoryVisible && (
         <div className="edit-modal">
           <div className="modal-content">
             <h3>选择分类</h3>
             <div className="category-list">
               {categoryList
-                .filter((category) => category.id !== '') // 排除“全部”选项
+                .filter((category) => category.id !== '')
                 .map((category) => (
                   <div
                     key={category.id}
@@ -293,7 +382,8 @@ function AlbumPage() {
         </div>
       )}
 
-      <div className="section">
+      {/* 页面头部（保持原有） */}
+      <div className="section" style={{ marginBottom: 0 }}>
         <div
           className="section-header"
           style={{
@@ -400,7 +490,9 @@ function AlbumPage() {
               return (
                 <div
                   key={currentPhoto.id || index}
-                  className={`album-item ${editMode ? 'edit-mode' : ''} ${isSelected ? 'selected' : ''}`}
+                  className={`album-item ${editMode ? 'edit-mode' : ''} ${
+                    isSelected ? 'selected' : ''
+                  }`}
                   style={{
                     position: 'relative',
                     borderRadius: 8,
@@ -455,6 +547,31 @@ function AlbumPage() {
             })}
           </div>
         )}
+        {/* 优化后的 加载更多/暂无更多 提示（核心修改） */}
+        <div className="album-loading-more">
+          {loadingMore ? (
+            // 加载中状态：带图标+旋转动画
+            <div className="album-loading-more__card album-loading-more--loading">
+              <span className="album-loading-more__icon">
+                <FaSpinner size={16} /> {/* 需导入 FaSpinner 图标 */}
+              </span>
+              <span className="album-loading-more__text">
+                正在加载更多照片
+                <span className="album-loading-more__spin"></span>
+              </span>
+            </div>
+          ) : !hasMore && images.length > 0 ? (
+            // 暂无更多状态：带图标+柔和文案
+            <div className="album-loading-more__card album-loading-more--no-more">
+              <span className="album-loading-more__icon">
+                <FaLeaf size={16} /> {/* 需导入 FaLeaf 图标（清新感） */}
+              </span>
+              <span className="album-loading-more__text">
+                已展示全部照片啦～
+              </span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <SemiCircleFloatCategory
