@@ -30,7 +30,8 @@ const CoupleGamesPage = () => {
       return;
     }
     // 跳转对应游戏页面（根据游戏id路由）
-    navigate(`/couple-games/${game.id}`);
+    // navigate(`/couple-games/${game.id}`);
+    toastMsg('暂未开放，请耐心等待')
   };
 
   // 生成游戏卡片渐变背景（复用主题页渐变逻辑，保持风格统一）
