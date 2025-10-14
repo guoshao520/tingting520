@@ -1,5 +1,6 @@
 import { createRef, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+// 主界面
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import MemoriesPage from '@/pages/MemoriesPage';
@@ -19,6 +20,12 @@ import UpdatePasswordPage from '@/pages/UpdatePasswordPage';
 import ThemePage from '@/pages/ThemePage';
 import ClassifysPage from '@/pages/ClassifysPage';
 import ClassifyForm from '@/pages/ClassifyForm';
+// 情侣小游戏
+import CoupleHomePage from '@/couple-games/HomePage';
+import PuzzleTogetherPage from '@/couple-games/PuzzleTogetherPage';
+import TacitTestPage from '@/couple-games/TacitTestPage';
+import CoupleDicePage from '@/couple-games/CoupleDicePage';
+import LoveDrawingPage from '@/couple-games/LoveDrawingPage';
 import BottomNavigation from '@/components/BottomNavigation';
 
 // 1. 全局导航ref（供外部调用）
@@ -33,6 +40,7 @@ export const navigate = (...args) => {
 
 // 3. 路由配置数组
 export const routeConfig = [
+  // 主界面
   { path: "/login", element: <LoginPage />, showLayout: false },
   { path: "/", element: <HomePage />, showLayout: true },
   { path: "/memories", element: <MemoriesPage />, showLayout: true },
@@ -52,6 +60,12 @@ export const routeConfig = [
   { path: "/theme", element: <ThemePage />, showLayout: true },
   { path: "/classifys", element: <ClassifysPage />, showLayout: true },
   { path: "/classify-form", element: <ClassifyForm />, showLayout: true },
+  // 情侣小游戏
+  { path: "/couple-games/home", element: <CoupleHomePage />, showLayout: true },
+  { path: "/couple-games/puzzle-together", element: <PuzzleTogetherPage />, showLayout: true },
+  { path: "/couple-games/tacit-test", element: <TacitTestPage />, showLayout: true },
+  { path: "/couple-games/couple-dice", element: <CoupleDicePage />, showLayout: true },
+  { path: "/couple-games/love-drawing", element: <LoveDrawingPage />, showLayout: true },
 ];
 
 // 4. 布局组件（包含滚动处理）
