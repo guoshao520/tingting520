@@ -24,7 +24,8 @@ import ClassifyForm from '@/pages/ClassifyForm';
 import CoupleHomePage from '@/couple-games/HomePage';
 import PuzzleTogetherPage from '@/couple-games/PuzzleTogetherPage';
 import CoupleDicePage from '@/couple-games/CoupleDicePage';
-import LoveDrawingPage from '@/couple-games/LoveDrawingPage';
+import PuzzleTogetherSuperPage from '@/couple-games/PuzzleTogetherSuperPage';
+import CoupleDiceSuperPage from '@/couple-games/CoupleDiceSuperPage';
 import BottomNavigation from '@/components/BottomNavigation';
 
 // 1. 全局导航ref（供外部调用）
@@ -63,7 +64,8 @@ export const routeConfig = [
   { path: "/couple-games/home", element: <CoupleHomePage />, showLayout: true },
   { path: "/couple-games/puzzle-together", element: <PuzzleTogetherPage />, showLayout: true },
   { path: "/couple-games/couple-dice", element: <CoupleDicePage />, showLayout: true },
-  { path: "/couple-games/love-drawing", element: <LoveDrawingPage />, showLayout: true },
+  { path: "/couple-games/puzzle-together-super", element: <PuzzleTogetherSuperPage />, showLayout: true },
+  { path: "/couple-games/couple-dice-super", element: <CoupleDiceSuperPage />, showLayout: true },
 ];
 
 // 4. 布局组件（包含滚动处理）

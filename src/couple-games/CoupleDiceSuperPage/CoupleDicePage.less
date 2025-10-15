@@ -1,0 +1,980 @@
+:root {
+  /* 情侣主题色：Boy蓝 / Girl粉 */
+  --boy-primary: #4a90e2;
+  --boy-light: #e6f0ff;
+  --boy-hover: #3a80d2;
+  --girl-primary: #ff6b8b;
+  --girl-light: #ffeef2;
+  --girl-hover: #ff5277;
+
+  /* 功能色 */
+  --win-color: #36d399;
+  --win-light: #f0fff4;
+  --lose-color: #f87272;
+  --lose-light: #fff2f2;
+  --draw-color: #fbbd23;
+  --draw-light: #fffbeb;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --bg-base: #fafafc;
+  --bg-card: #ffffff;
+  --border-light: #eeeeee;
+  --shadow-sm: 0 0.053rem 0.213rem rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 0.107rem 0.427rem rgba(0, 0, 0, 0.08);
+  --radius-sm: 0.213rem;
+  --radius-md: 0.32rem;
+  --radius-lg: 0.427rem;
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background-color: var(--bg-base);
+  min-height: 100vh;
+}
+
+/* 容器主样式 */
+.couple-dice-container {
+  padding-bottom: 1.067rem;
+}
+
+/* 顶部导航栏适配 */
+.dice-header {
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 游戏规则区域：顶部固定提示 */
+.game-rules {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin: 0.427rem;
+  padding: 0.427rem;
+
+  h4 {
+    color: var(--girl-primary);
+    font-size: 0.427rem;
+    font-weight: 600;
+    margin-bottom: 0.32rem;
+    display: flex;
+    align-items: center;
+    gap: 0.213rem;
+
+    &::before {
+      content: '🎮';
+      font-size: 0.48rem;
+    }
+  }
+
+  ul {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    padding-left: 0.533rem;
+
+    li {
+      margin-bottom: 0.16rem;
+      position: relative;
+      font-size: 0.373rem;
+
+      &::marker {
+        color: var(--girl-primary);
+      }
+    }
+  }
+}
+
+/* 主体内容区：居中+留白 */
+.dice-content {
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 0 0.427rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.64rem;
+}
+
+/* 阶段标题：清晰引导游戏进度 */
+.stage-title {
+  text-align: center;
+  margin-top: 0.427rem;
+
+  h2 {
+    color: var(--text-primary);
+    font-size: 0.48rem;
+    font-weight: 600;
+  }
+
+  .current-total {
+    color: var(--girl-primary);
+    font-size: 0.373rem;
+    font-weight: 500;
+  }
+}
+
+/* 玩家卡片容器：双列布局 */
+.players-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.427rem;
+  width: 100%;
+}
+
+/* 玩家卡片：核心交互区 */
+.player-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0.533rem;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+
+  /* 胜利状态 */
+  &.winner {
+    border: 0.027rem solid var(--win-color);
+    box-shadow: 0 0.16rem 0.533rem rgba(54, 211, 153, 0.15);
+
+    .player-header::after {
+      content: '✓ 胜利';
+      position: absolute;
+      top: 0.507rem;
+      right: 0.213rem;
+      background-color: var(--win-light);
+      color: var(--win-color);
+      font-size: 0.32rem;
+      font-weight: 500;
+      padding: 0.053rem 0.213rem;
+      border-radius: 0.32rem;
+    }
+  }
+
+  /* 失败状态 */
+  &.loser {
+    border: 0.027rem solid var(--lose-color);
+    box-shadow: 0 0.107rem 0.32rem rgba(248, 114, 114, 0.1);
+  }
+
+  /* 已认输状态 */
+  &.surrendered-card {
+    opacity: 0.85;
+    background-color: #fcfcfc;
+
+    .player-header::after {
+      content: '已认输';
+      position: absolute;
+      top: 0.507rem;
+      right: 0.213rem;
+      background-color: var(--lose-light);
+      color: var(--lose-color);
+      font-size: 0.32rem;
+      padding: 0.053rem 0.213rem;
+      border-radius: 0.32rem;
+    }
+  }
+}
+
+/* 玩家卡片头部：头像+名称 */
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: 0.267rem;
+  margin-bottom: 0.427rem;
+  padding-bottom: 0.32rem;
+  border-bottom: 0.027rem solid var(--border-light);
+
+  .player-avatar {
+    width: 0.853rem;
+    height: 0.853rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.427rem;
+  }
+
+  /* Boy头像配色 */
+  .boy-avatar {
+    background-color: var(--boy-light);
+    color: var(--boy-primary);
+  }
+
+  /* Girl头像配色 */
+  .girl-avatar {
+    background-color: var(--girl-light);
+    color: var(--girl-primary);
+  }
+
+  h3 {
+    color: var(--text-primary);
+    font-size: 0.427rem;
+    font-weight: 600;
+  }
+}
+
+/* 初始投注选项区 */
+.bet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+
+  p {
+    color: var(--text-secondary);
+    font-size: 0.373rem;
+    font-weight: 500;
+  }
+
+  .bet-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.267rem;
+  }
+
+  .bet-btn {
+    background-color: #f9f9f9;
+    border: 0.027rem solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.347rem;
+    padding: 0.267rem 0;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-base);
+
+    &:hover {
+      background-color: #f5f5f5;
+      border-color: #e0e0e0;
+    }
+
+    /* Boy选中样式 */
+    &.selected[data-player='boy'] {
+      background-color: var(--boy-light);
+      border-color: var(--boy-primary);
+      color: var(--boy-primary);
+      font-weight: 500;
+    }
+
+    /* Girl选中样式 */
+    &.selected[data-player='girl'] {
+      background-color: var(--girl-light);
+      border-color: var(--girl-primary);
+      color: var(--girl-primary);
+      font-weight: 500;
+    }
+  }
+}
+
+/* 策略选择选项区（第2、3个骰子） */
+.strategy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+
+  p {
+    color: var(--text-secondary);
+    font-size: 0.373rem;
+    font-weight: 500;
+  }
+
+  .strategy-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.213rem;
+  }
+
+  .strategy-btn {
+    background-color: #f9f9f9;
+    border: 0.027rem solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.347rem;
+    padding: 0.267rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-base);
+
+    &:hover {
+      background-color: #f5f5f5;
+      border-color: #e0e0e0;
+    }
+
+    /* Boy选中样式 */
+    &.selected[data-player='boy'] {
+      background-color: var(--boy-light);
+      border-color: var(--boy-primary);
+      color: var(--boy-primary);
+      font-weight: 500;
+    }
+
+    /* Girl选中样式 */
+    &.selected[data-player='girl'] {
+      background-color: var(--girl-light);
+      border-color: var(--girl-primary);
+      color: var(--girl-primary);
+      font-weight: 500;
+    }
+
+    /* 认输按钮特殊样式 */
+    &.surrender-btn {
+      color: var(--lose-color);
+
+      &:hover {
+        background-color: var(--lose-light);
+      }
+    }
+  }
+
+  /* 当前状态提示（已投点数/剩余骰子） */
+  .current-status {
+    background-color: #f9f9f9;
+    border-radius: var(--radius-sm);
+    padding: 0.32rem;
+    font-size: 0.32rem;
+    color: var(--text-tertiary);
+
+    p {
+      margin-bottom: 0.107rem;
+      font-size: 0.32rem;
+      font-weight: normal;
+      display: flex;
+      justify-content: space-between;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      span {
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+/* 认输状态显示 */
+.surrender-status {
+  background-color: var(--lose-light);
+  border-radius: var(--radius-sm);
+  color: var(--lose-color);
+  font-size: 0.373rem;
+  padding: 0.533rem 0.32rem;
+  text-align: center;
+}
+
+/* 投掷中状态显示 */
+.rolling-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.267rem;
+  padding: 0.533rem 0;
+
+  .loader {
+    width: 0.64rem;
+    height: 0.64rem;
+    border: 0.053rem solid var(--girl-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: var(--text-secondary);
+    font-size: 0.373rem;
+  }
+}
+
+/* 结果区域样式 */
+.outcome {
+  border-radius: var(--radius-sm);
+  padding: 0.427rem;
+  transition: var(--transition-base);
+
+  /* 奖励样式 */
+  &.reward {
+    background-color: var(--win-light);
+    border: 0.027rem solid var(--win-color);
+
+    .outcome-title {
+      color: var(--win-color);
+    }
+  }
+
+  /* 惩罚样式 */
+  &.punish {
+    background-color: var(--lose-light);
+    border: 0.027rem solid var(--lose-color);
+
+    .outcome-title {
+      color: var(--lose-color);
+    }
+  }
+
+  /* 平局样式 */
+  &.draw {
+    background-color: var(--draw-light);
+    border: 0.027rem solid var(--draw-color);
+
+    .outcome-title {
+      color: var(--draw-color);
+    }
+  }
+
+  .outcome-title {
+    font-size: 0.373rem;
+    font-weight: 500;
+    margin-bottom: 0.213rem;
+  }
+
+  .outcome-content {
+    color: var(--text-primary);
+    font-size: 0.4rem;
+    line-height: 1.5;
+  }
+}
+
+/* 骰子区域：核心视觉区 */
+.dice-area {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0.64rem 0.427rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.533rem;
+  width: 100%;
+}
+
+/* 骰子容器：横向排列 */
+.dice-container {
+  display: flex;
+  gap: 0.533rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* 骰子样式：3D质感+动态效果 */
+.dice {
+  width: 2.4rem;
+  height: 2.4rem;
+  perspective: 16rem;
+  position: relative;
+  opacity: 1;
+  transition: var(--transition-base);
+
+  /* 未投掷的骰子（半透明） */
+  &:not(.rolled):not(.rolling) {
+    opacity: 0.5;
+  }
+
+  /* 已投掷的骰子（高亮） */
+  &.rolled {
+    opacity: 1;
+  }
+
+  /* 投掷中动画 */
+  &.rolling {
+    animation: diceRoll 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+    transform-style: preserve-3d;
+  }
+
+  /* 骰子面（基础样式） */
+  .dice-faces {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0.107rem 0.32rem rgba(0, 0, 0, 0.1),
+      inset 0 0.053rem 0.107rem rgba(0, 0, 0, 0.05);
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  /* 骰子点（立体效果） */
+  .dice-dot {
+    position: absolute;
+    width: 18%;
+    height: 18%;
+    background-color: var(--text-primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset 0 0.027rem 0.053rem rgba(0, 0, 0, 0.3);
+    transition: var(--transition-base);
+  }
+
+  /* 未投掷占位符 */
+  .dice-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.747rem;
+    color: var(--text-tertiary);
+    box-shadow: inset 0 0.053rem 0.107rem rgba(0, 0, 0, 0.03);
+  }
+
+  /* 投掷中指示器（动态脉冲） */
+  .rolling-indicator {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.96rem;
+    box-shadow: 0 0.107rem 0.32rem rgba(0, 0, 0, 0.1);
+    animation: pulse 1s ease-in-out infinite alternate;
+  }
+}
+
+/* 骰子滚动动画（3D旋转+缩放） */
+@keyframes diceRoll {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+  }
+  25% {
+    transform: rotateX(360deg) rotateY(180deg) scale(1.05);
+  }
+  50% {
+    transform: rotateX(720deg) rotateY(360deg) scale(0.98);
+  }
+  75% {
+    transform: rotateX(1080deg) rotateY(540deg) scale(1.03);
+  }
+  100% {
+    transform: rotateX(1440deg) rotateY(720deg) scale(1);
+  }
+}
+
+/* 脉冲动画（投掷指示器） */
+@keyframes pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* 旋转动画（加载指示器） */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 阶段按钮容器（居中对齐） */
+.stage-button-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.213rem;
+}
+
+/* 按钮基础样式（统一视觉） */
+.roll-btn,
+.restart-btn {
+  border: none;
+  border-radius: 1.333rem;
+  font-size: 0.4rem;
+  font-weight: 600;
+  padding: 0.32rem 0.853rem;
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 投掷按钮（Girl粉色系） */
+.roll-btn {
+  background-color: var(--girl-primary);
+  color: white;
+
+  &:hover {
+    background-color: var(--girl-hover);
+    box-shadow: 0 0.16rem 0.427rem rgba(255, 107, 139, 0.25);
+  }
+
+  &:disabled {
+    background-color: #ffccd5;
+    color: #ffeef2;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+/* 重新开始按钮（Boy蓝色系） */
+.restart-btn {
+  background-color: var(--boy-primary);
+  color: white;
+
+  &:hover {
+    background-color: var(--boy-hover);
+    box-shadow: 0 0.16rem 0.427rem rgba(74, 144, 226, 0.25);
+  }
+}
+
+/* 最终结果汇总区（结果阶段显示） */
+.final-result-summary {
+  background-color: #f9f9f9;
+  border-radius: var(--radius-md);
+  padding: 0.427rem;
+  width: 100%;
+  text-align: center;
+  margin-top: 0.213rem;
+
+  h3 {
+    color: var(--text-primary);
+    font-size: 0.427rem;
+    font-weight: 600;
+    margin-bottom: 0.32rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.213rem;
+
+    &::before {
+      content: '🎯';
+      font-size: 0.48rem;
+    }
+  }
+
+  .dice-result {
+    color: var(--text-secondary);
+    font-size: 0.373rem;
+    line-height: 1.6;
+
+    p {
+      margin-bottom: 0.16rem;
+    }
+
+    .total-highlight {
+      color: var(--girl-primary);
+      font-weight: 700;
+      font-size: 0.427rem;
+      animation: bounce 1s ease-in-out;
+    }
+  }
+}
+
+/* 结果点数弹跳动画 */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* 响应式适配（平板+手机） */
+@media (max-width: 768px) {
+  .players-container {
+    grid-template-columns: 1fr;
+  }
+
+  .dice-container {
+    gap: 0.427rem;
+  }
+
+  .dice {
+    width: 2.133rem;
+    height: 2.133rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-rules {
+    margin: 0.32rem;
+    padding: 0.32rem;
+
+    h4 {
+      font-size: 0.4rem;
+    }
+
+    ul {
+      font-size: 0.32rem;
+      line-height: 1.6;
+    }
+  }
+
+  .dice-content {
+    gap: 0.427rem;
+  }
+
+  .player-card {
+    padding: 0.427rem;
+  }
+
+  .dice-area {
+    padding: 0.533rem 0.32rem;
+  }
+
+  .dice-container {
+    gap: 0.32rem;
+  }
+
+  .dice {
+    width: 1.867rem;
+    height: 1.867rem;
+  }
+
+  .roll-btn,
+  .restart-btn {
+    padding: 0.32rem 0.853rem;
+    font-size: 0.373rem;
+  }
+
+  .final-result-summary {
+    padding: 0.32rem;
+
+    h3 {
+      font-size: 0.4rem;
+    }
+
+    .dice-result {
+      font-size: 0.347rem;
+    }
+  }
+}
+
+/* 修复按钮数据属性绑定（确保玩家样式区分生效） */
+.bet-btn[data-player='boy'] {
+  &.selected {
+    background-color: var(--boy-light);
+    border-color: var(--boy-primary);
+    color: var(--boy-primary);
+  }
+}
+
+.bet-btn[data-player='girl'] {
+  &.selected {
+    background-color: var(--girl-light);
+    border-color: var(--girl-primary);
+    color: var(--girl-primary);
+  }
+}
+
+.strategy-btn[data-player='boy'] {
+  &.selected {
+    background-color: var(--boy-light);
+    border-color: var(--boy-primary);
+    color: var(--boy-primary);
+  }
+}
+
+.strategy-btn[data-player='girl'] {
+  &.selected {
+    background-color: var(--girl-light);
+    border-color: var(--girl-primary);
+    color: var(--girl-primary);
+  }
+}
+
+/* 下一步按钮（核心操作按钮）- 优化版 */
+.next-stage-btn {
+  background: linear-gradient(135deg, var(--girl-primary), var(--girl-hover));
+  color: white;
+  border: none;
+  border-radius: 1.333rem;
+  padding: 0.347rem 0.96rem;
+  font-size: 0.4rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  max-width: 10.667rem;
+  margin-top: 0.32rem;
+  box-shadow: 0 0.107rem 0.427rem rgba(255, 107, 139, 0.25),
+    inset 0 0.027rem 0.053rem rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &:disabled {
+    background: linear-gradient(135deg, #ffccd5, #ffb3c1);
+    color: #ffeef2;
+    cursor: not-allowed;
+    box-shadow: 0 0.053rem 0.213rem rgba(255, 107, 139, 0.1),
+      inset 0 0.027rem 0.053rem rgba(255, 255, 255, 0.2);
+    transform: none;
+  }
+
+  &:not(:disabled):hover {
+    background: linear-gradient(135deg, #ff5277, #ff3a60);
+    box-shadow: 0 0.213rem 0.64rem rgba(255, 82, 119, 0.35),
+      inset 0 0.027rem 0.053rem rgba(255, 255, 255, 0.4);
+    transform: translateY(-0.053rem) scale(1.02);
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 0.107rem 0.32rem rgba(255, 82, 119, 0.2),
+      inset 0 0.027rem 0.053rem rgba(0, 0, 0, 0.1);
+  }
+
+  &.loading {
+    position: relative;
+    pointer-events: none;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0.427rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0.48rem;
+      height: 0.48rem;
+      border: 0.053rem solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    &::after {
+      content: attr(data-loading-text);
+      display: inline-block;
+      margin-left: 0.96rem;
+    }
+  }
+}
+
+.final-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.213rem;
+}
+
+/* 当前下注提示样式 */
+.current-bet-indicator {
+  background-color: rgba(74, 144, 226, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 0.213rem 0.32rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.213rem;
+  font-size: 0.347rem;
+  margin-bottom: 0.107rem;
+
+  [data-player='boy'] & {
+    background-color: rgba(74, 144, 226, 0.05);
+  }
+
+  [data-player='girl'] & {
+    background-color: rgba(255, 107, 139, 0.05);
+  }
+
+  .indicator-label {
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  .indicator-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 0.053rem 0.16rem;
+    border-radius: 0.107rem;
+    background-color: rgba(74, 144, 226, 0.1);
+
+    [data-player='girl'] & {
+      background-color: rgba(255, 107, 139, 0.1);
+    }
+  }
+}
+
+/* 结果区域的下注类型标签样式 */
+.outcome-header {
+  flex-wrap: wrap;
+
+  .bet-type-tag {
+    font-size: 0.32rem;
+    padding: 0.053rem 0.16rem;
+    border-radius: 0.107rem;
+    margin-left: 0.16rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--text-tertiary);
+
+    [data-player='player1'] & {
+      background-color: rgba(74, 144, 226, 0.1);
+      color: var(--boy-primary);
+    }
+
+    [data-player='player2'] & {
+      background-color: rgba(255, 107, 139, 0.1);
+      color: var(--girl-primary);
+    }
+  }
+
+  .half-tag,
+  .raise-tag {
+    margin-left: 0.107rem;
+  }
+}
+
+/* 调整策略选项区域的间距 */
+.strategy-options {
+  gap: 0.267rem;
+
+  p {
+    margin-top: 0.107rem;
+  }
+}
+
+.waiting-status {
+  font-size: 0.373rem;
+}
+
+/* 加载动画（复用但优化速度） */
+@keyframes spin {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* 响应式适配：小屏调整尺寸 */
+@media (max-width: 480px) {
+  .next-stage-btn {
+    padding: 0.32rem 0.747rem;
+    font-size: 0.373rem;
+    max-width: 100%;
+  }
+
+  .next-stage-btn.loading {
+    &::before {
+      width: 0.427rem;
+      height: 0.427rem;
+      left: 0.373rem;
+    }
+
+    &::after {
+      margin-left: 0.853rem;
+    }
+  }
+}
+
+.dice-wrapper {
+  &:nth-last-child(1),
+  &:nth-last-child(2){
+    margin-top: 0.6rem;
+  }
+}
+
+.dice-label, .first-dice-result, .dice-summary, .outcome-header {
+  font-size: 0.3733rem;
+  line-height: 0.6rem;
+}
