@@ -179,11 +179,11 @@ const CouplePuzzle = () => {
     const newStepCount = currentStepCount + 1
     setCurrentStepCount(newStepCount)
 
-    // 每走5步切换回合，否则保持当前回合
+    // 每走3步切换回合，否则保持当前回合
     if (newStepCount >= 3) {
       setCurrentTurn((prev) => (prev === 'boy' ? 'girl' : 'boy'))
       setCurrentStepCount(0) // 重置步数计数器
-      toastMsg(`轮到${currentTurn === 'boy' ? 'girl' : 'boy'}!`)
+      // toastMsg(`轮到${currentTurn === 'boy' ? 'girl' : 'boy'}!`)
     }
 
     const newCompleted = calculateCompleted(newLayout)
@@ -349,7 +349,7 @@ const CouplePuzzle = () => {
       {stage === 'playing' && selectedPhoto && (
         <div className="puzzle-playing">
           <div className="couple-status">
-            <div className="player boy">
+            {/* <div className="player boy">
               <div className="avatar">他</div>
               <div
                 className={`turn-indicator ${
@@ -358,13 +358,13 @@ const CouplePuzzle = () => {
               >
                 {currentTurn === 'boy' && '当前回合'}
               </div>
-            </div>
+            </div> */}
 
             <div className="game-stats">
-              <div className="stat-item">
+              {/* <div className="stat-item">
                 <Heart size={16} color="#ff4d6d" />
                 <span>爱心值: {lovePoints}</span>
-              </div>
+              </div> */}
               <div className="stat-item">
                 <span>用时: {formatTime(timer)}</span>
               </div>
@@ -373,7 +373,7 @@ const CouplePuzzle = () => {
               </div>
             </div>
 
-            <div className="player girl">
+            {/* <div className="player girl">
               <div
                 className={`turn-indicator ${
                   currentTurn === 'girl' ? 'active' : ''
@@ -382,7 +382,7 @@ const CouplePuzzle = () => {
                 {currentTurn === 'girl' && '当前回合'}
               </div>
               <div className="avatar">她</div>
-            </div>
+            </div> */}
           </div>
 
           <div className="puzzle-area">
@@ -423,7 +423,7 @@ const CouplePuzzle = () => {
           </div>
 
           <div className="interaction-btns">
-            <button
+            {/* <button
               className="love-btn"
               onClick={() => {
                 setLovePoints((prev) => Math.min(prev + 10, 100))
@@ -437,7 +437,7 @@ const CouplePuzzle = () => {
             >
               <Heart size={18} color="#fff" />
               给TA加油
-            </button>
+            </button> */}
             <button
               className="reset-btn"
               onClick={() => initPuzzle(selectedPhoto)}
@@ -460,7 +460,7 @@ const CouplePuzzle = () => {
               ))}
             </div> */}
 
-            <h2>太棒了！你们完成了～</h2>
+            <h2>太棒了！你完成了～</h2>
 
             <div className="completed-image">
               <img src={getImgUrl(selectedPhoto.image_url)} alt="完成的拼图" />
@@ -471,14 +471,14 @@ const CouplePuzzle = () => {
                 <span>总用时</span>
                 <span>{formatTime(timer)}</span>
               </div>
-              <div className="stat-row">
+              {/* <div className="stat-row">
                 <span>获得爱心</span>
                 <span>{lovePoints} 💖</span>
               </div>
               <div className="stat-row">
                 <span>协作默契度</span>
                 <span>{Math.min(100, 100 - Math.floor(timer / 2))}%</span>
-              </div>
+              </div> */}
             </div>
 
             <div className="complete-actions">

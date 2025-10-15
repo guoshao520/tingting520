@@ -4,7 +4,7 @@ import TopNavBar from '@/components/TopNavBar'
 import { useNavigate } from 'react-router-dom'
 import { rewardPunishPairs } from './rewards-punishments'
 
-// 骰子点数样式配置
+// 骰子点数样式配置（保留原配置）
 const diceDots = {
   1: [[50, 50]],
   2: [
@@ -41,43 +41,120 @@ const diceDots = {
 
 const CoupleDicePage = () => {
   const navigate = useNavigate()
-  // 游戏阶段：roll1(先投第1个骰子) → bet(双方下注) → roll2(投第2个骰子) → strategy(策略选择) → roll3(投第3个骰子) → result(结果)
-  const [gameStage, setGameStage] = useState('roll1')
+  const [gameStage, setGameStage] = useState('rollFirst')
   const [bets, setBets] = useState({
     player1: {
       betType: null,
-      strategy: 'keep', // 默认选择保持不变
+      strategy: 'keep',
       status: 'active',
       isRaised: false,
+      firstDice: 0,
+      isFirstBetter: false,
     },
     player2: {
       betType: null,
-      strategy: 'keep', // 默认选择保持不变
+      strategy: 'keep',
       status: 'active',
       isRaised: false,
+      firstDice: 0,
+      isFirstBetter: false,
     },
   })
-  const [diceValues, setDiceValues] = useState([0, 0, 0]) // 三个骰子结果
-  const [total, setTotal] = useState(0)
+  const [diceValues, setDiceValues] = useState([0, 0, 0, 0])
   const [results, setResults] = useState({
-    player1: { result: null, punishType: null }, // result: 'win'/'lose'; punishType: 'full'/'fullPlus'/'half'/null
+    player1: { result: null, punishType: null },
     player2: { result: null, punishType: null },
   })
   const [rewardPunish, setRewardPunish] = useState({
     player1: { type: '', content: '' },
     player2: { type: '', content: '' },
   })
-  const diceRefs = [useRef(null), useRef(null), useRef(null)]
-  const [isReady, setIsReady] = useState(false) // 是否准备好进入下一阶段
+  const diceRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
+  const [isReady, setIsReady] = useState(false)
+  const [firstDiceResult, setFirstDiceResult] = useState({
+    valid: false,
+    firstBetter: null,
+  })
 
-  // 检查当前阶段是否准备就绪
+  // ---------------------- 原有核心逻辑保留 ----------------------
+  const getValidFirstDice = () => {
+    let dice = Math.floor(Math.random() * 6) + 1
+    while (dice === 1 || dice === 6) {
+      dice = Math.floor(Math.random() * 6) + 1
+    }
+    return dice
+  }
+
+  const rollFirstDice = async () => {
+    diceRefs[0].current.classList.add('rolling')
+    diceRefs[1].current.classList.add('rolling')
+
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    const p1FirstDice = getValidFirstDice()
+    const p2FirstDice = getValidFirstDice()
+
+    const newDiceValues = [...diceValues]
+    newDiceValues[0] = p1FirstDice
+    newDiceValues[1] = p2FirstDice
+    setDiceValues(newDiceValues)
+
+    setBets((prev) => ({
+      player1: { ...prev.player1, firstDice: p1FirstDice },
+      player2: { ...prev.player2, firstDice: p2FirstDice },
+    }))
+
+    diceRefs[0].current.classList.remove('rolling')
+    diceRefs[1].current.classList.remove('rolling')
+    diceRefs[0].current.classList.add('rolled')
+    diceRefs[1].current.classList.add('rolled')
+
+    if (p1FirstDice > p2FirstDice) {
+      setFirstDiceResult({ valid: true, firstBetter: 'player1' })
+      setBets((prev) => ({
+        player1: { ...prev.player1, isFirstBetter: true },
+        player2: { ...prev.player2, isFirstBetter: false },
+      }))
+    } else if (p1FirstDice < p2FirstDice) {
+      setFirstDiceResult({ valid: true, firstBetter: 'player2' })
+      setBets((prev) => ({
+        player1: { ...prev.player1, isFirstBetter: false },
+        player2: { ...prev.player2, isFirstBetter: true },
+      }))
+    } else {
+      setTimeout(() => {
+        toastMsg('双方首骰相同，正在重新投掷')
+        resetFirstDice()
+        rollFirstDice()
+      }, 1000)
+      return
+    }
+
+    setGameStage('firstDiceResult')
+  }
+
+  const resetFirstDice = () => {
+    diceRefs[0].current.classList.remove('rolled', 'rolling')
+    diceRefs[1].current.classList.remove('rolled', 'rolling')
+    setDiceValues((prev) => [0, prev[2], prev[3], prev[4]])
+    setFirstDiceResult({ valid: false, firstBetter: null })
+  }
+
+  // ---------------------- 修复1：调整下注阶段就绪判断逻辑（确保后下注者选完后标记就绪） ----------------------
   useEffect(() => {
     switch (gameStage) {
       case 'bet':
-        setIsReady(!!bets.player1.betType && !!bets.player2.betType)
+        const firstBetter = firstDiceResult.firstBetter
+        if (!firstBetter) return // 先下注者未确定时不判断
+
+        const firstBetReady = bets[firstBetter].betType !== null // 先下注者是否完成
+        const secondBetter = firstBetter === 'player1' ? 'player2' : 'player1'
+        const secondBetReady = bets[secondBetter].betType !== null // 后下注者是否完成
+
+        // 双方都完成才标记就绪（修复核心：等待后下注者操作）
+        setIsReady(firstBetReady && secondBetReady)
         break
       case 'strategy':
-        // 只要策略不是 null 就视为已选择（默认'keep'也是有效选择）
         const p1Ready = bets.player1.strategy !== null
         const p2Ready = bets.player2.strategy !== null
         setIsReady(p1Ready && p2Ready)
@@ -85,131 +162,86 @@ const CoupleDicePage = () => {
       default:
         setIsReady(false)
     }
-  }, [gameStage, bets])
+  }, [gameStage, bets, firstDiceResult.firstBetter])
 
-  // 随机生成骰子点数
+  // ---------------------- 原有逻辑保留 ----------------------
   const getRandomDice = () => Math.floor(Math.random() * 6) + 1
 
-  // 计算大小和单双（基于最终总点数）
-  const calculateFinalResult = (total) => {
-    const isBig = total >= 11 && total <= 18
-    const isOdd = total % 2 !== 0
-    return { isBig, isOdd }
+  const calculateFinalResult = () => {
+    const p1Total = diceValues[0] + diceValues[2] + diceValues[3]
+    const p2Total = diceValues[1] + diceValues[2] + diceValues[3]
+    return { p1Total, p2Total }
   }
 
-  // 判断玩家输赢（修正逻辑）
-  const judgeWinLose = (betType, total) => {
-    // 完全基于下注类型和实际结果判断，与是否加注无关
+  const judgeWinLose = (betType, playerTotal) => {
     switch (betType) {
       case 'big':
-        return total >= 11 && total <= 18 // 直接用实际点数判断，避免中间变量
+        return playerTotal >= 11 && playerTotal <= 18
       case 'small':
-        return total >= 3 && total <= 10
+        return playerTotal >= 6 && playerTotal <= 10
       case 'odd':
-        return total % 2 !== 0
+        return playerTotal % 2 !== 0
       case 'even':
-        return total % 2 === 0
+        return playerTotal % 2 === 0
       default:
         return false
     }
   }
 
-  // 生成奖惩内容
   const generateRewardPunish = (resultInfo, isPlayer1, pairIndex) => {
     const playerBet = bets[isPlayer1 ? 'player1' : 'player2']
-
-    // 根据结果类型和加注状态选择对应的奖惩对
     let pair
     if (resultInfo.result === 'win') {
-      if (playerBet.isRaised) {
-        pair = rewardPunishPairs.plus[pairIndex]
-      } else {
-        pair = rewardPunishPairs.normal[pairIndex]
-      }
-      return {
-        type: 'reward',
-        content: pair.reward,
-      }
+      pair = playerBet.isRaised
+        ? rewardPunishPairs.plus[pairIndex]
+        : rewardPunishPairs.normal[pairIndex]
+      return { type: 'reward', content: pair.reward }
     } else if (resultInfo.result === 'lose') {
       if (resultInfo.punishType === 'half') {
         pair = rewardPunishPairs.half[pairIndex]
-      } else if (playerBet.isRaised) {
-        pair = rewardPunishPairs.plus[pairIndex]
       } else {
-        pair = rewardPunishPairs.normal[pairIndex]
+        pair = playerBet.isRaised
+          ? rewardPunishPairs.plus[pairIndex]
+          : rewardPunishPairs.normal[pairIndex]
       }
-      return {
-        type: 'punish',
-        content: pair.punish,
-      }
+      return { type: 'punish', content: pair.punish }
     }
     return { type: 'draw', content: '平局！无奖惩' }
-    // // 胜利：新增「双方都胜利时无奖励」的判断
-    // if (resultInfo.result === 'win') {
-    //   // 判断是否双方都胜利（核心新增逻辑）
-    //   const isBothWin =
-    //     results.player1.result === 'win' && results.player2.result === 'win'
-    //   if (isBothWin) {
-    //     return { type: 'draw', content: '双方都胜利，无奖励' } // 双方胜利时返回无奖励
-    //   }
-    //   // 仅单方胜利时，正常按加注状态给奖励
-    //   const rewardList = playerBet.isRaised ? rewardsPlus : rewards
-    //   return {
-    //     type: 'reward',
-    //     content: rewardList[Math.floor(Math.random() * rewardList.length)],
-    //   }
-    // }
-    // // 失败逻辑保持不变...
-    // if (resultInfo.result === 'lose') {
-    //   let punishList = []
-    //   if (resultInfo.punishType === 'half') {
-    //     punishList = punishments.half
-    //   } else if (playerBet.isRaised) {
-    //     punishList = punishments.fullPlus
-    //   } else {
-    //     punishList = punishments.full
-    //   }
-    //   return {
-    //     type: 'punish',
-    //     content: punishList[Math.floor(Math.random() * punishList.length)],
-    //   }
-    // }
-    // // 平局逻辑保持不变...
-    // return { type: 'draw', content: '平局！无奖惩' }
   }
 
-  // 结算最终结果
-  const calculateSettlement = (finalTotal) => {
+  const calculateSettlement = () => {
+    const { p1Total, p2Total } = calculateFinalResult()
     const settlementResult = { player1: {}, player2: {} }
 
-    // 先计算各自的初始结果
-    const p1InitialWin = judgeWinLose(bets.player1.betType, finalTotal)
-    const p2InitialWin = judgeWinLose(bets.player2.betType, finalTotal)
+    console.log('p1Total', p1Total)
+    console.log('p2Total', p2Total)
 
-    // 处理双方都赢或都输的情况（抵消为平局）
+    const p1InitialWin = judgeWinLose(bets.player1.betType, p1Total)
+    const p2InitialWin = judgeWinLose(bets.player2.betType, p2Total)
+
     if (p1InitialWin === p2InitialWin) {
       settlementResult.player1 = { result: 'draw', punishType: null }
       settlementResult.player2 = { result: 'draw', punishType: null }
       return settlementResult
     }
 
-    // 处理玩家1结果
     if (bets.player1.status === 'surrendered') {
-      // 已认输：检查对方是否也认输
       const p2Surrendered = bets.player2.status === 'surrendered'
       settlementResult.player1 = {
         result: p2Surrendered ? 'draw' : 'lose',
         punishType: p2Surrendered ? null : 'half',
       }
     } else {
-      const isWin = judgeWinLose(bets.player1.betType, finalTotal)
       settlementResult.player1 = {
-        result: isWin ? 'win' : 'lose', // 正确应用判定结果
-        punishType: isWin ? null : bets.player1.isRaised ? 'fullPlus' : 'full',
+        result: p1InitialWin ? 'win' : 'lose',
+        punishType: p1InitialWin
+          ? null
+          : bets.player1.isRaised
+          ? 'fullPlus'
+          : 'full',
       }
     }
 
-    // 处理玩家2结果
     if (bets.player2.status === 'surrendered') {
       const p1Surrendered = bets.player1.status === 'surrendered'
       settlementResult.player2 = {
@@ -217,206 +249,219 @@ const CoupleDicePage = () => {
         punishType: p1Surrendered ? null : 'half',
       }
     } else {
-      const isWin = judgeWinLose(bets.player2.betType, finalTotal)
       settlementResult.player2 = {
-        result: isWin ? 'win' : 'lose', // 正确应用判定结果
-        punishType: isWin ? null : bets.player2.isRaised ? 'fullPlus' : 'full',
+        result: p2InitialWin ? 'win' : 'lose',
+        punishType: p2InitialWin
+          ? null
+          : bets.player2.isRaised
+          ? 'fullPlus'
+          : 'full',
       }
     }
 
     return settlementResult
   }
 
-  // 投掷骰子（根据当前阶段投掷对应骰子）
-  const rollDice = (targetIndex) => {
-    // 标记当前投掷的骰子
+  const rollNormalDice = (targetIndex) => {
     const currentRef = diceRefs[targetIndex]
     currentRef.current.classList.add('rolling')
 
-    // 模拟骰子滚动动画后生成结果
     setTimeout(() => {
       const newDiceValues = [...diceValues]
       newDiceValues[targetIndex] = getRandomDice()
-      setDiceValues(newDiceValues)
+      setDiceValues(newDiceValues) // 仅更新骰子状态
 
-      // 计算当前总点数
-      const newTotal = newDiceValues.reduce((a, b) => a + b, 0)
-      setTotal(newTotal)
-
-      // 结束动画
       currentRef.current.classList.remove('rolling')
       currentRef.current.classList.add('rolled')
 
-      // 推进到下一阶段
       switch (targetIndex) {
-        case 0:
-          // 第1个骰子投完→进入下注阶段
-          setGameStage('bet')
-          break
-        case 1:
-          // 第2个骰子投完→进入策略选择阶段
-          setGameStage('strategy')
-          break
         case 2:
-          // 第3个骰子投完→先更新状态，再结算结果
-          setDiceValues(newDiceValues)
-          const newTotal = newDiceValues.reduce((a, b) => a + b, 0)
-          setTotal(newTotal)
-
-          // 结束动画
-          currentRef.current.classList.remove('rolling')
-          currentRef.current.classList.add('rolled')
-
-          // 使用新计算的newTotal直接结算，而不是依赖state中的total
-          const finalResults = calculateSettlement(newTotal) // 传递最新的总点数
-          setResults(finalResults)
-
-          // 生成一个随机索引，确保双方使用同一对奖惩
-          const randomIndex = Math.floor(
-            Math.random() * rewardPunishPairs.normal.length
-          )
-
-          // 生成奖惩
-          setRewardPunish({
-            player1: generateRewardPunish(
-              finalResults.player1,
-              true,
-              randomIndex
-            ),
-            player2: generateRewardPunish(
-              finalResults.player2,
-              false,
-              randomIndex
-            ),
-          })
-
-          setGameStage('result')
+          setGameStage('strategy') // 投第2个骰子→策略阶段
+          break
+        case 3:
+          setGameStage('toCalculate') // 投最后1个骰子→过渡阶段（等待状态更新）
+          break
       }
-    }, 2500) // 骰子动画时长
+    }, 2500)
   }
 
-  // 玩家操作（下注/选择策略/认输）
+  // 过渡阶段结算结果（确保diceValues已更新）
+  useEffect(() => {
+    if (gameStage === 'toCalculate') {
+      const finalResults = calculateSettlement() // 此时用的是最新的diceValues
+      setResults(finalResults)
+      const randomIndex = Math.floor(
+        Math.random() * rewardPunishPairs.normal.length
+      )
+      setRewardPunish({
+        player1: generateRewardPunish(finalResults.player1, true, randomIndex),
+        player2: generateRewardPunish(finalResults.player2, false, randomIndex),
+      })
+      setGameStage('result') // 结算完成→进入结果阶段
+    }
+  }, [gameStage, diceValues]) // 依赖diceValues，确保状态更新后触发
+
   const handlePlayerAction = (player, actionType, value) => {
     if (bets[player].status === 'surrendered') return
 
     setBets((prev) => {
       const updatedPlayer = { ...prev[player] }
-
       if (actionType === 'bet') {
         updatedPlayer.betType = updatedPlayer.betType === value ? null : value
       } else if (actionType === 'strategy') {
         updatedPlayer.strategy = value
-        // 重置相关状态
         updatedPlayer.isRaised = value === 'raise'
         updatedPlayer.status = value === 'surrender' ? 'surrendered' : 'active'
       }
-
-      return {
-        ...prev,
-        [player]: updatedPlayer,
-      }
+      return { ...prev, [player]: updatedPlayer }
     })
   }
 
-  // 进入下一阶段（投骰子/结算）
   const goToNextStage = () => {
     switch (gameStage) {
+      case 'firstDiceResult':
+        setGameStage('bet')
+        break
       case 'bet':
-        // 下注完成→投第2个骰子
-        rollDice(1)
+        rollNormalDice(2)
         break
       case 'strategy':
-        // 策略选择完成→投第3个骰子
-        rollDice(2)
+        rollNormalDice(3)
         break
     }
   }
 
-  // 重新开始游戏
   const restartGame = () => {
-    setGameStage('roll1')
+    setGameStage('rollFirst')
     setBets({
       player1: {
         betType: null,
         strategy: 'keep',
         status: 'active',
         isRaised: false,
+        firstDice: 0,
+        isFirstBetter: false,
       },
       player2: {
         betType: null,
         strategy: 'keep',
         status: 'active',
         isRaised: false,
+        firstDice: 0,
+        isFirstBetter: false,
       },
     })
-    setDiceValues([0, 0, 0])
-    setTotal(0)
+    setDiceValues([0, 0, 0, 0])
     setResults({
       player1: { result: null, punishType: null },
       player2: { result: null, punishType: null },
     })
-    // 重置骰子样式
-    diceRefs.forEach((ref) => {
-      ref.current.classList.remove('rolled', 'rolling')
-    })
+    setFirstDiceResult({ valid: false, firstBetter: null })
+    diceRefs.forEach((ref) => ref.current.classList.remove('rolled', 'rolling'))
   }
 
-  // 渲染骰子
+  // ---------------------- 修复2：渲染骰子保留原逻辑 ----------------------
   const renderDice = (index) => {
     const value = diceValues[index]
     const isRolling =
-      gameStage === `roll${index + 1}` || (gameStage === 'roll1' && index === 0)
+      (gameStage === 'rollFirst' && (index === 0 || index === 1)) ||
+      (gameStage === 'rollSecond' && index === 2) ||
+      (gameStage === 'rollThird' && index === 3)
     const isRolled = value > 0
+    const isFirstDice = index === 0 || index === 1
+    const firstDiceLabel = index === 0 ? 'Boy首骰' : 'Girl首骰'
 
     return (
-      <div
-        ref={diceRefs[index]}
-        className={`dice ${isRolling ? 'rolling' : ''} ${
-          isRolled ? 'rolled' : ''
-        }`}
-        style={{
-          opacity: !isRolled && gameStage !== `roll${index + 1}` ? 0.5 : 1,
-        }}
-      >
-        {isRolling ? (
-          <div className="rolling-indicator">🎲</div>
-        ) : isRolled ? (
-          <div className="dice-faces">
-            {diceDots[value].map(([x, y], dotIndex) => (
-              <div
-                key={dotIndex}
-                className="dice-dot"
-                style={{ left: `${x}%`, top: `${y}%` }}
-              ></div>
-            ))}
+      <div className="dice-wrapper" key={index}>
+        {isFirstDice && (
+          <div className="dice-label">
+            {firstDiceLabel}
+            {/* {(bets.player1.isFirstBetter && index === 0) || (bets.player2.isFirstBetter && index === 1) ? (
+              <span className="first-better-tag"></span>
+            ) : null} */}
           </div>
-        ) : (
-          <div className="dice-placeholder">?</div>
         )}
+        <div
+          ref={diceRefs[index]}
+          className={`dice ${isRolling ? 'rolling' : ''} ${
+            isRolled ? 'rolled' : ''
+          }`}
+          style={{ opacity: !isRolled && !isRolling ? 0.5 : 1 }}
+        >
+          {isRolling ? (
+            <div className="rolling-indicator">🎲</div>
+          ) : isRolled ? (
+            <div className="dice-faces">
+              {diceDots[value].map(([x, y], dotIndex) => (
+                <div
+                  key={dotIndex}
+                  className="dice-dot"
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                ></div>
+              ))}
+            </div>
+          ) : (
+            <div className="dice-placeholder">?</div>
+          )}
+        </div>
       </div>
     )
   }
 
-  // 渲染玩家操作区域
+  // ---------------------- 修复3：核心修复 - 调整下注阶段操作权限逻辑 ----------------------
   const renderPlayerAction = (player) => {
     const playerBet = bets[player]
     const isBoy = player === 'player1'
+    const firstBetter = firstDiceResult.firstBetter
+    const secondBetter = firstBetter === 'player1' ? 'player2' : 'player1' // 后下注者标识
 
     switch (gameStage) {
-      case 'roll1':
-        // 投第1个骰子阶段：显示等待提示
+      case 'rollFirst':
         return (
           <div className="waiting-status">
             <div className="loader"></div>
-            <p>正在投掷第1个骰子...</p>
+            <p>正在自动投掷首骰（禁1/6）...</p>
+          </div>
+        )
+      case 'firstDiceResult':
+        return (
+          <div className="first-dice-result">
+            <p className="result-label">你的首骰点数：{playerBet.firstDice}</p>
+            {/* <div className="first-dice-value">{playerBet.firstDice}</div> */}
+            {playerBet.isFirstBetter && (
+              <div className="first-better-tip">✨ 你是先下注者！</div>
+            )}
+            {!playerBet.isFirstBetter && firstBetter !== null && (
+              <div className="second-better-tip">
+                等待{firstBetter === 'player1' ? 'Boy' : 'Girl'}先下注...
+              </div>
+            )}
           </div>
         )
       case 'bet':
-        // 下注阶段：选择大小/单双
+        // 关键修复：下注权限控制逻辑
+        const isFirstBetterReady = bets[firstBetter]?.betType !== null // 先下注者是否已选
+        const canBet =
+          player === firstBetter ||
+          (player === secondBetter && isFirstBetterReady)
+        const waitTip =
+          player === firstBetter
+            ? '请选择下注类型（先下注者）'
+            : isFirstBetterReady
+            ? '可以选择下注类型啦（后下注者）'
+            : `等待${firstBetter === 'player1' ? 'Boy' : 'Girl'}先下注...`
+
         return (
           <div className="bet-options">
-            <p>选择下注类型：</p>
-            <div className="bet-buttons">
+            <p>{waitTip}</p>
+            {/* 修复：仅控制透明度，不禁用点击事件（确保后下注者能操作） */}
+            <div
+              className="bet-buttons"
+              style={{
+                opacity: canBet ? 1 : 0.6,
+                pointerEvents: canBet ? 'auto' : 'none', // 只有能操作时才开放点击
+              }}
+            >
               <button
                 className={`bet-btn ${
                   playerBet.betType === 'big' ? 'selected' : ''
@@ -433,7 +478,7 @@ const CoupleDicePage = () => {
                 data-player={isBoy ? 'boy' : 'girl'}
                 onClick={() => handlePlayerAction(player, 'bet', 'small')}
               >
-                小 (3-10)
+                小 (6-10)
               </button>
               <button
                 className={`bet-btn ${
@@ -454,27 +499,27 @@ const CoupleDicePage = () => {
                 双
               </button>
             </div>
-            {/* 显示已投的第1个骰子点数 */}
+            {/* 显示双方首骰点数 */}
             <div className="rolled-dice-tip">
               <p>
-                已投点数：<span className="dice-value">{diceValues[0]}</span>
+                双方首骰：{bets.player1.firstDice} (Boy) vs{' '}
+                {bets.player2.firstDice} (Girl)
               </p>
             </div>
           </div>
         )
-      case 'roll2':
-        // 投第2个骰子阶段：显示等待提示
+      // 以下阶段保留原逻辑
+      case 'rollSecond':
         return (
           <div className="waiting-status">
             <div className="loader"></div>
             <p>正在投掷第2个骰子...</p>
             <div className="rolled-dice-tip">
-              <p>已投点数：{diceValues[0]} + ?</p>
+              <p>已投点数：{playerBet.firstDice} + ?</p>
             </div>
           </div>
         )
       case 'strategy':
-        // 策略选择阶段：加注/不变/认输
         if (playerBet.status === 'surrendered') {
           return (
             <div className="surrender-status">
@@ -483,23 +528,20 @@ const CoupleDicePage = () => {
             </div>
           )
         }
-
-        // 获取玩家当前下注类型的文本描述
         const betTypeText =
           {
             big: '大 (11-18)',
-            small: '小 (3-10)',
+            small: '小 (6-10)',
             odd: '单',
             even: '双',
           }[playerBet.betType] || '未下注'
-
         return (
           <div className="strategy-options">
             <div className="current-bet-indicator">
               <span className="indicator-label">当前下注：</span>
               <span className="indicator-value">{betTypeText}</span>
             </div>
-            <p>选择策略（基于前2个骰子）：</p>
+            <p>选择策略（基于首骰+第2骰）：</p>
             <div className="strategy-buttons">
               <button
                 className={`strategy-btn raise-btn ${
@@ -531,43 +573,39 @@ const CoupleDicePage = () => {
                 认输（输一半）
               </button>
             </div>
-            {/* 显示已投的前2个骰子点数 */}
             <div className="rolled-dice-tip">
               <p>
-                已投点数：{diceValues[0]} + {diceValues[1]} ={' '}
+                已投点数：{playerBet.firstDice} + {diceValues[2]} ={' '}
                 <span className="total-value">
-                  {diceValues[0] + diceValues[1]}
+                  {playerBet.firstDice + diceValues[2]}
                 </span>
               </p>
             </div>
           </div>
         )
-      case 'roll3':
-        // 投第3个骰子阶段：显示等待提示
+      case 'rollThird':
         return (
           <div className="waiting-status">
             <div className="loader"></div>
             <p>正在投掷第3个骰子...</p>
             <div className="rolled-dice-tip">
               <p>
-                已投点数：{diceValues[0]} + {diceValues[1]} + ?
+                已投点数：{playerBet.firstDice} + {diceValues[2]} + ?
               </p>
             </div>
           </div>
         )
       case 'result':
-        // 结果阶段：显示奖惩
         const playerResult = results[player]
         const playerReward = rewardPunish[player]
-        // 获取玩家下注类型的文本描述（复用之前的逻辑）
         const betTypeResultText =
           {
             big: '大 (11-18)',
-            small: '小 (3-10)',
+            small: '小 (6-10)',
             odd: '单',
             even: '双',
           }[playerBet.betType] || '未下注'
-
+        const finalTotal = playerBet.firstDice + diceValues[2] + diceValues[3]
         return (
           <div className={`outcome ${playerReward.type}`}>
             <div className="outcome-header">
@@ -588,6 +626,7 @@ const CoupleDicePage = () => {
                   : '平局'}
               </h4>
               <span className="bet-type-tag">下注：{betTypeResultText}</span>
+              <span className="total-tag">总点数：{finalTotal}</span>
               {playerResult.punishType === 'half' && (
                 <span className="half-tag">（输一半）</span>
               )}
@@ -603,83 +642,108 @@ const CoupleDicePage = () => {
     }
   }
 
-  // 页面加载完成后自动投掷第1个骰子
+  // ---------------------- 原有逻辑保留 ----------------------
   useEffect(() => {
-    if (gameStage === 'roll1') {
-      rollDice(0)
+    if (gameStage === 'rollFirst') {
+      rollFirstDice()
     }
   }, [gameStage])
 
+  const toastMsg = (msg) => {
+    const toast = document.createElement('div')
+    toast.className = 'temp-toast'
+    toast.textContent = msg
+    document.body.appendChild(toast)
+    setTimeout(() => {
+      toast.style.opacity = '0'
+      setTimeout(() => document.body.removeChild(toast), 300)
+    }, 1500)
+  }
+
   return (
     <div className="couple-dice-container">
-      {/* 顶部导航栏 */}
       <TopNavBar title={'情侣骰子对战'} />
 
-      {/* 游戏规则提示 */}
       {/* <div className="game-rules">
         <h4>🎮 游戏规则</h4>
         <ul>
-          <li>1. 系统会先投掷1个骰子，后双方进行下注（大小/单双）</li>
-          <li>
-            2. 投掷第2个骰子后，可选择：加注（奖惩+1）/ 保持不变 /
-            认输（输一半）
-          </li>
-          <li>3. 认输后若对方最终失败，你无需接受惩罚</li>
-          <li>
-            4. 总点数 11-18 为「大」，3-10
-            为「小」；点数和为奇数/偶数对应「单/双」
-          </li>
+          <li>1. 系统自动为双方投掷「首骰」（禁1和6），首骰大的先下注</li>
+          <li>2. 下注类型：大（11-18）、小（6-10）、单（总点数奇数）、双（总点数偶数）</li>
+          <li>3. 先下注者完成选择后，后下注者可选择下注类型</li>
+          <li>4. 投掷第2个骰子后，可选择：加注（奖惩+1）/ 保持不变 / 认输（输一半）</li>
+          <li>5. 最终总点数 = 你的首骰 + 公共第2骰 + 公共第3骰</li>
         </ul>
+        <style>{`
+          .temp-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border-radius: 4px;
+            z-index: 9999;
+            transition: opacity 0.3s;
+          }
+        `}</style>
       </div> */}
 
-      {/* 主体内容区 */}
       <div className="dice-content">
-        {/* 游戏阶段标题 */}
         <div className="stage-title">
           <h2>
-            {gameStage === 'roll1' && '第1步：投掷初始骰子'}
-            {gameStage === 'bet' && '第2步：双方下注（大小/单双）'}
-            {gameStage === 'roll2' && '第3步：投掷第2个骰子'}
-            {gameStage === 'strategy' && '第4步：选择策略（加注/不变/认输）'}
-            {gameStage === 'roll3' && '第5步：投掷最后1个骰子'}
+            {gameStage === 'rollFirst' && '第1步：自动投掷首骰（禁1/6）'}
+            {gameStage === 'firstDiceResult' &&
+              '第2步：首骰结果（判定先下注者）'}
+            {gameStage === 'bet' && '第3步：下注阶段（先下注者优先）'}
+            {gameStage === 'rollSecond' && '第4步：投掷第2个骰子'}
+            {gameStage === 'strategy' && '第5步：选择策略（加注/不变/认输）'}
+            {gameStage === 'rollThird' && '第6步：投掷最后1个骰子'}
             {gameStage === 'result' && '最终结果'}
           </h2>
-          {total > 0 && gameStage !== 'result' && (
-            <p className="current-total">当前累计：{total}</p>
+          {gameStage === 'result' && (
+            <p className="current-total">
+              双方总点数：Boy {diceValues[0] + diceValues[2] + diceValues[3]} |
+              Girl {diceValues[1] + diceValues[2] + diceValues[3]}
+            </p>
           )}
         </div>
 
-        {/* 骰子区域 */}
         <div className="dice-area">
-          {/* 骰子容器 */}
           <div className="dice-container">
             {renderDice(0)}
             {renderDice(1)}
             {renderDice(2)}
+            {renderDice(3)}
           </div>
 
-          {/* 阶段操作按钮（下注完成/策略选择完成后显示） */}
-          {(gameStage === 'bet' || gameStage === 'strategy') && isReady && (
+          {(gameStage === 'firstDiceResult' && firstDiceResult.valid) ||
+          (gameStage === 'bet' && isReady) ||
+          (gameStage === 'strategy' && isReady) ? (
             <button className="next-stage-btn" onClick={goToNextStage}>
-              {gameStage === 'bet'
-                ? '下注完成，投掷第2个骰子'
-                : '策略选择完成，投掷最后1个骰子'}
+              {gameStage === 'firstDiceResult' && '进入下注阶段'}
+              {gameStage === 'bet' && '下注完成，投掷第2个骰子'}
+              {gameStage === 'strategy' && '策略选择完成，投掷最后1个骰子'}
             </button>
-          )}
+          ) : null}
 
-          {/* 最终结果汇总（仅结果阶段显示） */}
           {gameStage === 'result' && (
             <div className="final-result">
               <h3>🎯 最终结算</h3>
               <div className="dice-summary">
-                <p>
-                  骰子点数：{diceValues[0]} + {diceValues[1]} + {diceValues[2]}{' '}
-                  = <span className="total-highlight">{total}</span>
-                </p>
-                <p>
-                  结果判定：{total >= 11 && total <= 18 ? '大' : '小'} |{' '}
-                  {total % 2 !== 0 ? '单' : '双'}
-                </p>
+                <div>
+                  骰子点数：
+                  <p>
+                    Boy首骰 {diceValues[0]} + 第2骰 {diceValues[2]} + 第3骰{' '}
+                    {diceValues[3]} ={' '}
+                    {diceValues[0] + diceValues[2] + diceValues[3]}{' '}
+                  </p>
+                  <p>
+                    Girl首骰 {diceValues[1]} + 第2骰 {diceValues[2]} + 第3骰{' '}
+                    {diceValues[3]} ={' '}
+                    {diceValues[1] + diceValues[2] + diceValues[3]}
+                  </p>
+                </div>
               </div>
               <button className="restart-btn" onClick={restartGame}>
                 再来一局
@@ -688,9 +752,7 @@ const CoupleDicePage = () => {
           )}
         </div>
 
-        {/* 玩家区域 */}
         <div className="players-container">
-          {/* 玩家1（Boy） */}
           <div
             className={`player-card ${
               results.player1.result === 'win'
@@ -709,12 +771,9 @@ const CoupleDicePage = () => {
                 <span className="surrender-badge">已认输</span>
               )}
             </div>
-
-            {/* 玩家操作/结果区 */}
             {renderPlayerAction('player1')}
           </div>
 
-          {/* 玩家2（Girl） */}
           <div
             className={`player-card ${
               results.player2.result === 'win'
@@ -733,8 +792,6 @@ const CoupleDicePage = () => {
                 <span className="surrender-badge">已认输</span>
               )}
             </div>
-
-            {/* 玩家操作/结果区 */}
             {renderPlayerAction('player2')}
           </div>
         </div>
