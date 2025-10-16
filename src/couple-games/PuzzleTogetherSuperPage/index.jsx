@@ -428,7 +428,7 @@ const CouplePuzzle = () => {
           </div>
           
           {/* 明确的开始游戏按钮，增强用户体验 */}
-          <div className="start-game-section" style={{ marginTop: '30px', textAlign: 'center' }}>
+          {/* <div className="start-game-section" style={{ marginTop: '30px', textAlign: 'center' }}>
             <button
               className="start-game-btn"
               onClick={confirmDifficultyAndStart}
@@ -448,7 +448,7 @@ const CouplePuzzle = () => {
             >
               <Heart size={20} color="white" /> 开始拼图挑战
             </button>
-          </div>
+          </div> */}
         </div>
       )}
 
