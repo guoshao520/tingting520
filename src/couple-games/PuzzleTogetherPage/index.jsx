@@ -273,7 +273,7 @@ const CouplePuzzle = () => {
 
   return (
     <div className="couple-puzzle">
-      <TopNavBar title="情侣拼图" />
+      <TopNavBar title="恋恋拼图" />
 
       {/* ---------------------- 原有内容（无修改） ---------------------- */}
       {/* 1. 分类选择页 */}

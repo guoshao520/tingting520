@@ -2,8 +2,8 @@ import { FaHeart, FaComment, FaImage, FaList, FaCog, FaPaintBrush, FaDice } from
 
 export const coupleGamesData = [
   {
-    id: 'puzzle-together',
-    name: '双人拼图',
+    id: 'puzzle-together-super',
+    name: '恋恋拼图',
     desc: '上传你们的合照，一起拼出专属回忆',
     primaryColor: '#FF6B8A',
     secondaryColor: '#FFA7B5',
@@ -19,7 +19,7 @@ export const coupleGamesData = [
   },
   // {
   //   id: 'puzzle-together-super',
-  //   name: '双人拼图(变态版)',
+  //   name: '恋恋拼图(变态版)',
   //   desc: '上传你们的合照，一起拼出专属回忆',
   //   primaryColor: '#FF6B8A',
   //   secondaryColor: '#FFA7B5',

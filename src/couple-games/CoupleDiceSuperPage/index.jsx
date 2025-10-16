@@ -176,7 +176,7 @@ const CoupleDicePage = () => {
   const judgeWinLose = (betType, playerTotal) => {
     switch (betType) {
       case 'big':
-        return playerTotal >= 11 && playerTotal <= 18
+        return playerTotal >= 11 && playerTotal <= 15
       case 'small':
         return playerTotal >= 6 && playerTotal <= 10
       case 'odd':
@@ -469,7 +469,7 @@ const CoupleDicePage = () => {
                 data-player={isBoy ? 'boy' : 'girl'}
                 onClick={() => handlePlayerAction(player, 'bet', 'big')}
               >
-                大 (11-18)
+                大 (11-15)
               </button>
               <button
                 className={`bet-btn ${
@@ -530,7 +530,7 @@ const CoupleDicePage = () => {
         }
         const betTypeText =
           {
-            big: '大 (11-18)',
+            big: '大 (11-15)',
             small: '小 (6-10)',
             odd: '单',
             even: '双',
@@ -600,7 +600,7 @@ const CoupleDicePage = () => {
         const playerReward = rewardPunish[player]
         const betTypeResultText =
           {
-            big: '大 (11-18)',
+            big: '大 (11-15)',
             small: '小 (6-10)',
             odd: '单',
             even: '双',
@@ -668,7 +668,7 @@ const CoupleDicePage = () => {
         <h4>🎮 游戏规则</h4>
         <ul>
           <li>1. 系统自动为双方投掷「首骰」（禁1和6），首骰大的先下注</li>
-          <li>2. 下注类型：大（11-18）、小（6-10）、单（总点数奇数）、双（总点数偶数）</li>
+          <li>2. 下注类型：大（11-15）、小（6-10）、单（总点数奇数）、双（总点数偶数）</li>
           <li>3. 先下注者完成选择后，后下注者可选择下注类型</li>
           <li>4. 投掷第2个骰子后，可选择：加注（奖惩+1）/ 保持不变 / 认输（输一半）</li>
           <li>5. 最终总点数 = 你的首骰 + 公共第2骰 + 公共第3骰</li>

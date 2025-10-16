@@ -3,12 +3,11 @@ import './PuzzleTogetherPage.less'
 import TopNavBar from '@/components/TopNavBar'
 import EmptyState from '@/components/EmptyState'
 import { useNavigate } from 'react-router-dom'
-import photos from '@/api/photos' // 照片列表接口
-import photo_category from '@/api/photo_category' // 分类列表接口
+import photos from '@/api/photos'
+import photo_category from '@/api/photo_category'
 import { getImgUrl } from '@/utils'
 import { toastMsg } from '@/utils/toast'
 
-// 爱心图标组件
 const Heart = ({ size = 20, color = '#ff4d6d', animate = false }) => (
   <svg
     width={size}
@@ -23,13 +22,12 @@ const Heart = ({ size = 20, color = '#ff4d6d', animate = false }) => (
 
 const CouplePuzzle = () => {
   const navigate = useNavigate()
-  const [stage, setStage] = useState('category') // category/photo/playing/complete
+  const [stage, setStage] = useState('category') // category, photo, difficulty, playing, complete
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [categoryPhotos, setCategoryPhotos] = useState([])
   const [selectedPhoto, setSelectedPhoto] = useState(null)
-
-  // 游戏核心状态（无修改）
+  const [renderKey, setRenderKey] = useState(0)
   const [puzzleLayout, setPuzzleLayout] = useState([])
   const [emptyPos, setEmptyPos] = useState(8)
   const [currentTurn, setCurrentTurn] = useState('boy')
@@ -40,10 +38,24 @@ const CouplePuzzle = () => {
   const [loading, setLoading] = useState(false)
 
   const puzzleRef = useRef(null)
-  const puzzleSize = 3
-  const totalPieces = puzzleSize * puzzleSize
+  const [puzzleSize, setPuzzleSize] = useState(3) // 初始简单难度3×3
+  const [selectedDifficulty, setSelectedDifficulty] = useState({
+    name: '简单',
+    size: 3,
+  })
+  const [currentStepCount, setCurrentStepCount] = useState(0)
 
-  // 1. 加载分类列表（无修改）
+  // 难度选项配置
+  const difficultyOptions = [
+    { name: '幼儿', size: 2, desc: '2×2网格' },
+    { name: '简单', size: 3, desc: '3×3网格' },
+    { name: '普通', size: 4, desc: '4×4网格' },
+    { name: '一般', size: 5, desc: '5×5网格' },
+    { name: '困难', size: 6, desc: '6×6网格' },
+    { name: '地狱', size: 7, desc: '7×7网格' },
+  ]
+
+  // 加载分类列表
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -51,100 +63,127 @@ const CouplePuzzle = () => {
         setCategories(data || [])
       } catch (error) {
         console.error('加载分类失败:', error)
+        toastMsg('加载分类失败，请稍后再试', 'error')
       }
     }
-
     if (stage === 'category') {
       loadCategories()
     }
   }, [stage])
 
-  // 2. 加载选中分类下的照片（无修改）
+  // 加载选中分类下的照片
   useEffect(() => {
-    const loadPhotosByCategory = async () => {
+    const loadCategoriesByCategory = async () => {
       if (!selectedCategory) return
-
       setLoading(true)
       try {
         const { data } = await photos.list({ category_id: selectedCategory.id })
         setCategoryPhotos(data?.rows || [])
-        console.log(
-          'data?.rows?.map(v => v.image_url',
-          data?.rows?.map((v) => v.image_url)
-        )
       } catch (error) {
         console.error('加载照片失败:', error)
+        toastMsg('加载照片失败，请稍后再试', 'error')
       } finally {
         setLoading(false)
       }
     }
-
     if (stage === 'photo' && selectedCategory) {
-      loadPhotosByCategory()
+      loadCategoriesByCategory()
     }
   }, [stage, selectedCategory])
 
-  // 选择分类后进入照片选择页（无修改）
+  // 游戏计时逻辑
+  useEffect(() => {
+    let timerInterval
+    if (stage === 'playing') {
+      timerInterval = setInterval(() => setTimer(prev => prev + 1), 1000)
+    }
+    return () => clearInterval(timerInterval)
+  }, [stage])
+
+  // 选择分类后进入照片选择页
   const handleCategorySelect = (category) => {
     setSelectedCategory(category)
     setStage('photo')
   }
 
-  // 选择照片后初始化游戏（无修改）
+  // 选择照片后进入难度选择页
   const handlePhotoSelect = (photo = null) => {
     const targetPhoto =
-      photo || categoryPhotos[Math.floor(Math.random() * categoryPhotos.length)]
+      photo || (categoryPhotos.length > 0 ? categoryPhotos[Math.floor(Math.random() * categoryPhotos.length)] : null)
+    if (!targetPhoto) {
+      toastMsg('暂无照片可用，请选择其他分类', 'warning')
+      return
+    }
     setSelectedPhoto(targetPhoto)
-    initPuzzle(targetPhoto)
+    setStage('difficulty') // 明确进入难度选择页
   }
 
+  // 切换难度：仅更新选中状态，不直接进入游戏
+  const handleDifficultySelect = (difficulty) => {
+    setSelectedDifficulty(difficulty)
+    setPuzzleSize(difficulty.size)
+  }
+
+  // 确认难度并开始游戏
+  const confirmDifficultyAndStart = () => {
+    setRenderKey(prev => prev + 1) // 强制重新渲染
+    initPuzzle(selectedPhoto) // 初始化拼图并进入游戏
+  }
+
+  // 初始化拼图
   const initPuzzle = (photo) => {
+    const totalPieces = puzzleSize * puzzleSize
     const baseLayout = Array.from({ length: totalPieces }, (_, i) => i)
     let shuffled = [...baseLayout]
-    let currentEmptyPos = 8 // 空块初始位置（最后一个）
+    let currentEmptyPos = totalPieces - 1
 
-    // 调整洗牌次数为20次（适中难度，基于相邻交换的合理混乱度）
-    for (let i = 0; i < 20; i++) {
-      // 仅保留相邻交换逻辑（去掉跨格交换）
+    // 洗牌次数随难度增加
+    const shuffleTimes = Math.max(50, totalPieces * 5)
+    for (let i = 0; i < shuffleTimes; i++) {
       const adjacentPositions = []
+      // 左邻
       if (currentEmptyPos % puzzleSize > 0)
-        adjacentPositions.push(currentEmptyPos - 1) // 左
+        adjacentPositions.push(currentEmptyPos - 1)
+      // 右邻
       if (currentEmptyPos % puzzleSize < puzzleSize - 1)
-        adjacentPositions.push(currentEmptyPos + 1) // 右
+        adjacentPositions.push(currentEmptyPos + 1)
+      // 上邻
       if (Math.floor(currentEmptyPos / puzzleSize) > 0)
-        adjacentPositions.push(currentEmptyPos - puzzleSize) // 上
+        adjacentPositions.push(currentEmptyPos - puzzleSize)
+      // 下邻
       if (Math.floor(currentEmptyPos / puzzleSize) < puzzleSize - 1)
-        adjacentPositions.push(currentEmptyPos + puzzleSize) // 下
+        adjacentPositions.push(currentEmptyPos + puzzleSize)
 
       if (adjacentPositions.length > 0) {
-        // 从相邻位置中随机选一个交换
         const randomAdjacentPos =
-          adjacentPositions[
-            Math.floor(Math.random() * adjacentPositions.length)
-          ]
-        // 用临时变量交换，避免语法歧义
-        const temp = shuffled[currentEmptyPos]
-        shuffled[currentEmptyPos] = shuffled[randomAdjacentPos]
-        shuffled[randomAdjacentPos] = temp
-        currentEmptyPos = randomAdjacentPos // 更新空块位置
+          adjacentPositions[Math.floor(Math.random() * adjacentPositions.length)]
+        // 交换空白块与随机相邻块
+        ;[shuffled[currentEmptyPos], shuffled[randomAdjacentPos]] = [
+          shuffled[randomAdjacentPos],
+          shuffled[currentEmptyPos],
+        ]
+        currentEmptyPos = randomAdjacentPos
       }
     }
 
+    // 重置游戏状态并进入游戏
     setPuzzleLayout(shuffled)
     setEmptyPos(currentEmptyPos)
     setCompleted(calculateCompleted(shuffled))
     setLovePoints(0)
     setTimer(0)
     setCurrentTurn('boy')
-    setStage('playing')
+    setCurrentStepCount(0)
+    setStage('playing') // 最后才切换到游戏状态
   }
 
-  // 计算已完成碎片（无修改）
+  // 计算已完成的拼图块数
   const calculateCompleted = (layout) => {
-    return layout.filter((val, idx) => val === idx && val !== 8).length
+    const totalPieces = puzzleSize * puzzleSize
+    return layout.filter((val, idx) => val === idx && val !== totalPieces - 1).length
   }
 
-  // 检查相邻（无修改）
+  // 判断点击位置是否与空白块相邻
   const isAdjacent = (pos1, pos2) => {
     const row1 = Math.floor(pos1 / puzzleSize)
     const col1 = pos1 % puzzleSize
@@ -156,164 +195,160 @@ const CouplePuzzle = () => {
     )
   }
 
-  // 新增状态：记录当前玩家已走步数
-  const [currentStepCount, setCurrentStepCount] = useState(0)
-
-  // 修改移动碎片逻辑
+  // 移动拼图块逻辑
   const movePiece = (clickedPos) => {
     if (stage !== 'playing' || clickedPos === emptyPos) return
     if (!isAdjacent(clickedPos, emptyPos)) return
 
+    // 复制并更新拼图布局
     const newLayout = [...puzzleLayout]
     ;[newLayout[clickedPos], newLayout[emptyPos]] = [
       newLayout[emptyPos],
       newLayout[clickedPos],
     ]
 
+    // 更新状态
     setPuzzleLayout(newLayout)
     setLastMoved(clickedPos)
     setEmptyPos(clickedPos)
-    setLovePoints((prev) => prev + 3)
+    setLovePoints(prev => prev + 3)
 
-    // 计算当前玩家已走步数
+    // 步数计数与回合切换
     const newStepCount = currentStepCount + 1
     setCurrentStepCount(newStepCount)
-
-    // 每走3步切换回合，否则保持当前回合
     if (newStepCount >= 3) {
-      setCurrentTurn((prev) => (prev === 'boy' ? 'girl' : 'boy'))
-      setCurrentStepCount(0) // 重置步数计数器
-      // toastMsg(`轮到${currentTurn === 'boy' ? 'girl' : 'boy'}!`)
+      setCurrentTurn(prev => prev === 'boy' ? 'girl' : 'boy')
+      setCurrentStepCount(0)
     }
 
+    // 检查是否完成拼图
     const newCompleted = calculateCompleted(newLayout)
     setCompleted(newCompleted)
-    if (newCompleted === totalPieces - 1) {
+    if (newCompleted === puzzleSize * puzzleSize - 1) {
       setStage('complete')
-      setLovePoints((prev) => prev + 50)
+      setLovePoints(prev => prev + 50)
+      toastMsg('拼图完成！获得额外爱心值奖励', 'success')
     }
   }
 
-  // 计时器（无修改）
-  useEffect(() => {
-    let timer
-    if (stage === 'playing') {
-      timer = setInterval(() => setTimer((prev) => prev + 1), 1000)
-    }
-    return () => clearInterval(timer)
-  }, [stage])
-
-  // 格式化时间（无修改）
+  // 格式化时间
   const formatTime = (sec) => {
     const mins = Math.floor(sec / 60)
     const seconds = sec % 60
     return `${mins}:${seconds.toString().padStart(2, '0')}`
   }
 
-  // 计算碎片背景位置（无修改）
+  // 计算单个拼图块的样式
   const getPieceStyle = (pieceIndex) => {
     if (!selectedPhoto || !puzzleRef.current) return {}
 
-    const containerSize = puzzleRef.current.clientWidth
-    const pieceSize = containerSize / puzzleSize
+    const container = puzzleRef.current
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+
+    const pieceWidth = containerWidth / puzzleSize
+    const pieceHeight = containerHeight / puzzleSize
 
     const row = Math.floor(pieceIndex / puzzleSize)
     const col = pieceIndex % puzzleSize
 
     return {
       backgroundImage: `url(${getImgUrl(selectedPhoto.image_url)})`,
-      backgroundPosition: `-${col * pieceSize}px -${row * pieceSize}px`,
-      backgroundSize: `${containerSize}px ${containerSize}px`,
+      backgroundPosition: `-${col * pieceWidth}px -${row * pieceHeight}px`,
+      backgroundSize: `${containerWidth}px ${containerHeight}px`,
       backgroundRepeat: 'no-repeat',
+      width: '100%',
+      height: '100%',
+      cursor: 'pointer',
     }
   }
 
-  // ---------------------- 新增：上一步/下一步逻辑 ----------------------
+  // 上一步逻辑
   const goPrevStep = () => {
     switch (stage) {
       case 'photo':
-        setStage('category') // 照片页→分类页
+        setStage('category')
+        break
+      case 'difficulty':
+        setStage('photo')
         break
       case 'playing':
-        setStage('photo') // 游戏页→照片页
+        setStage('difficulty')
         break
       case 'complete':
-        setStage('playing') // 完成页→游戏页
+        setStage('playing')
         break
       default:
-        navigate('/couple-games') // 分类页→返回游戏列表
+        navigate('/couple-games/home')
     }
   }
 
+  // 下一步逻辑
   const goNextStep = () => {
     switch (stage) {
       case 'category':
-        if (selectedCategory) setStage('photo') // 分类页→照片页（需选中分类）
+        if (selectedCategory) setStage('photo')
+        else toastMsg('请先选择一个分类', 'warning')
         break
       case 'photo':
-        if (selectedPhoto || categoryPhotos.length > 0) {
-          handlePhotoSelect() // 照片页→游戏页（选中照片或有照片可随机）
+        if (categoryPhotos.length > 0) {
+          handlePhotoSelect()
+        } else {
+          toastMsg('当前分类暂无照片，请选择其他分类', 'warning')
         }
         break
-      case 'playing':
-        // 游戏中无"下一步"，可留空或提示完成拼图
+      case 'difficulty':
+        confirmDifficultyAndStart() // 难度选择页的下一步是确认并开始游戏
         break
       case 'complete':
-        setStage('category') // 完成页→分类页（重新选择）
+        setStage('category')
         break
     }
   }
 
-  // 判断按钮是否禁用
-  const isPrevDisabled = stage === 'category' // 分类页禁用上一步
-  const isNextDisabled =
-    (stage === 'category' && !selectedCategory) || // 分类页未选分类
-    (stage === 'photo' && categoryPhotos.length === 0) || // 照片页无照片
-    stage === 'playing' // 游戏中禁用下一步
+  // 判断上一步/下一步按钮是否禁用
+  const isPrevDisabled = stage === 'category'
+  const isNextDisabled = stage === 'playing'
 
   return (
     <div className="couple-puzzle">
-      <TopNavBar title="情侣拼图" />
+      <TopNavBar title="恋恋拼图" onBack={() => navigate('/couple-games/home')} />
 
-      {/* ---------------------- 原有内容（无修改） ---------------------- */}
-      {/* 1. 分类选择页 */}
+      {/* 分类选择页面 */}
       {stage === 'category' && (
         <div className="category-select">
           <div className="section-title">
             <Heart size={20} color="#ff4d6d" />
             <h2>选择照片分类</h2>
           </div>
-
           {categories.length === 0 ? (
             <div className="empty-state">加载分类中...</div>
           ) : (
             <div className="categories-grid">
-              {Array.isArray(categories) &&
-                categories?.map((category) => (
-                  <div
-                    key={category.id}
-                    className="category-card"
-                    onClick={() => handleCategorySelect(category)}
-                  >
-                    <div className="category-icon">
-                      <Heart size={24} color="#ff4d6d" />
-                    </div>
-                    <h3 className="category-name">{category.name}</h3>
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className="category-card"
+                  onClick={() => handleCategorySelect(category)}
+                >
+                  <div className="category-icon">
+                    <Heart size={24} color="#ff4d6d" />
                   </div>
-                ))}
+                  <h3 className="category-name">{category.name}</h3>
+                </div>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* 2. 照片选择页 */}
+      {/* 照片选择页面 */}
       {stage === 'photo' && selectedCategory && (
         <div className="photo-select">
           <div className="section-title">
             <Heart size={20} color="#ff4d6d" />
             <h2>{selectedCategory.name} · 选择照片</h2>
           </div>
-
           {loading ? (
             <div className="loading-state">加载照片中...</div>
           ) : categoryPhotos.length === 0 ? (
@@ -328,73 +363,134 @@ const CouplePuzzle = () => {
                     onClick={() => handlePhotoSelect(photo)}
                   >
                     <img src={getImgUrl(photo.image_url)} alt={photo.name} />
-                    {/* <span className="photo-name">{photo.name}</span> */}
                   </div>
                 ))}
               </div>
-
               <button
                 className="random-photo-btn"
                 onClick={() => handlePhotoSelect()}
               >
-                <Heart size={18} color="#ff4d6d" />
-                随机选择一张
+                <Heart size={18} color="#ff4d6d" /> 随机选择一张
               </button>
             </>
           )}
         </div>
       )}
 
-      {/* 3. 游戏界面 */}
+      {/* 难度选择页面 - 现在会完整显示并等待确认 */}
+      {stage === 'difficulty' && selectedPhoto && (
+        <div className="difficulty-select">
+          <div className="section-title">
+            <Heart size={20} color="#ff4d6d" />
+            <h2>选择拼图难度</h2>
+          </div>
+          <div className="difficulty-grid">
+            {difficultyOptions.map((diff) => (
+              <div
+                key={diff.size}
+                className={`difficulty-card ${
+                  selectedDifficulty.size === diff.size ? 'active' : ''
+                }`}
+                onClick={() => handleDifficultySelect(diff)}
+              >
+                <div className="difficulty-name">{diff.name}</div>
+                <div className="difficulty-desc">{diff.desc}</div>
+                <div className="difficulty-preview">
+                  <div
+                    className="grid-preview"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: `repeat(${diff.size}, 1fr)`,
+                      gap: '4px',
+                      width: '80px',
+                      height: '80px',
+                    }}
+                  >
+                    {Array.from({ length: diff.size * diff.size }).map(
+                      (_, i) => (
+                        <div
+                          key={i}
+                          className="grid-cell"
+                          style={{
+                            backgroundColor:
+                              i === diff.size * diff.size - 1
+                                ? '#f0f0f0'
+                                : '#ffccd5',
+                            borderRadius: '2px',
+                          }}
+                        ></div>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* 明确的开始游戏按钮，增强用户体验 */}
+          <div className="start-game-section" style={{ marginTop: '30px', textAlign: 'center' }}>
+            <button
+              className="start-game-btn"
+              onClick={confirmDifficultyAndStart}
+              style={{
+                padding: '12px 30px',
+                fontSize: '18px',
+                backgroundColor: '#ff4d6d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '30px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(255,77,109,0.3)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <Heart size={20} color="white" /> 开始拼图挑战
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 游戏进行页面 */}
       {stage === 'playing' && selectedPhoto && (
         <div className="puzzle-playing">
           <div className="couple-status">
-            {/* <div className="player boy">
-              <div className="avatar">他</div>
-              <div
-                className={`turn-indicator ${
-                  currentTurn === 'boy' ? 'active' : ''
-                }`}
-              >
-                {currentTurn === 'boy' && '当前回合'}
-              </div>
-            </div> */}
-
             <div className="game-stats">
-              {/* <div className="stat-item">
-                <Heart size={16} color="#ff4d6d" />
-                <span>爱心值: {lovePoints}</span>
-              </div> */}
               <div className="stat-item">
-                <span>用时: {formatTime(timer)}</span>
+                难度: {selectedDifficulty.name}（{puzzleSize}×{puzzleSize}）
               </div>
+              <div className="stat-item">用时: {formatTime(timer)}</div>
               <div className="stat-item">
-                <span>完成度: {completed}/8</span>
+                完成度: {completed}/{puzzleSize * puzzleSize - 1}
               </div>
             </div>
-
-            {/* <div className="player girl">
-              <div
-                className={`turn-indicator ${
-                  currentTurn === 'girl' ? 'active' : ''
-                }`}
-              >
-                {currentTurn === 'girl' && '当前回合'}
-              </div>
-              <div className="avatar">她</div>
-            </div> */}
           </div>
 
-          <div className="puzzle-area">
+          <div className="puzzle-area" key={renderKey}>
             <div className="puzzle-container" ref={puzzleRef}>
-              <div className="puzzle-board">
+              <div
+                className="puzzle-board"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${puzzleSize}, 1fr)`,
+                  gridTemplateRows: `repeat(${puzzleSize}, 1fr)`,
+                  gap: '2px',
+                  width: '100%',
+                  maxWidth: '600px',
+                  aspectRatio: '1/1',
+                  margin: '0 auto',
+                  background: '#333',
+                }}
+              >
                 {puzzleLayout.map((pieceIndex, posIndex) => (
                   <div
                     key={posIndex}
                     className={`puzzle-piece 
                       ${posIndex === emptyPos ? 'empty' : ''} 
                       ${
-                        pieceIndex === posIndex && pieceIndex !== 8
+                        pieceIndex === posIndex &&
+                        pieceIndex !== puzzleSize * puzzleSize - 1
                           ? 'completed'
                           : ''
                       }
@@ -405,82 +501,67 @@ const CouplePuzzle = () => {
                       }
                       ${lastMoved === posIndex ? 'moved' : ''}
                     `}
-                    style={
-                      posIndex !== emptyPos ? getPieceStyle(pieceIndex) : {}
-                    }
+                    style={posIndex !== emptyPos ? getPieceStyle(pieceIndex) : {}}
                     onClick={() => movePiece(posIndex)}
                     role="button"
                   >
-                    {pieceIndex === posIndex && pieceIndex !== 8 && (
-                      <div className="completed-heart">
-                        <Heart size={16} color="#ff4d6d" />
-                      </div>
-                    )}
+                    {pieceIndex === posIndex &&
+                      pieceIndex !== puzzleSize * puzzleSize - 1 && (
+                        <div className="completed-heart">
+                          <Heart size={16} color="#ff4d6d" />
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
           <div className="interaction-btns">
-            {/* <button
-              className="love-btn"
-              onClick={() => {
-                setLovePoints((prev) => Math.min(prev + 10, 100))
-                const tip = document.createElement('div')
-                tip.className = 'cheer-tip'
-                tip.textContent =
-                  currentTurn === 'boy' ? '给她加油！' : '给你加油！'
-                document.body.appendChild(tip)
-                setTimeout(() => tip.remove(), 1000)
-              }}
-            >
-              <Heart size={18} color="#fff" />
-              给TA加油
-            </button> */}
             <button
               className="reset-btn"
               onClick={() => initPuzzle(selectedPhoto)}
             >
               重新开始
             </button>
+            <button
+              className="change-difficulty-btn"
+              onClick={() => setStage('difficulty')}
+            >
+              更换难度
+            </button>
           </div>
         </div>
       )}
 
-      {/* 4. 完成界面 */}
+      {/* 游戏完成页面 */}
       {stage === 'complete' && selectedPhoto && (
         <div className="puzzle-complete">
           <div className="confetti"></div>
-
           <div className="complete-card">
-            {/* <div className="complete-hearts">
-              {[...Array(5)].map((_, i) => (
-                <Heart key={i} size={24} color="#ff4d6d" animate />
-              ))}
-            </div> */}
-
-            <h2>太棒了！你完成了～</h2>
-
+            <h2>太棒了！{selectedDifficulty.name}难度挑战成功～</h2>
             <div className="completed-image">
               <img src={getImgUrl(selectedPhoto.image_url)} alt="完成的拼图" />
             </div>
-
             <div className="complete-stats">
+              <div className="stat-row">
+                <span>难度</span>
+                <span>
+                  {selectedDifficulty.name}（{puzzleSize}×{puzzleSize}）
+                </span>
+              </div>
               <div className="stat-row">
                 <span>总用时</span>
                 <span>{formatTime(timer)}</span>
               </div>
-              {/* <div className="stat-row">
-                <span>获得爱心</span>
-                <span>{lovePoints} 💖</span>
+              <div className="stat-row">
+                <span>完成块数</span>
+                <span>{puzzleSize * puzzleSize - 1} 块（含1块空块）</span>
               </div>
               <div className="stat-row">
-                <span>协作默契度</span>
-                <span>{Math.min(100, 100 - Math.floor(timer / 2))}%</span>
-              </div> */}
+                <span>爱心值</span>
+                <span>{lovePoints} 💖</span>
+              </div>
             </div>
-
             <div className="complete-actions">
               <button
                 className="another-btn"
@@ -494,21 +575,17 @@ const CouplePuzzle = () => {
               >
                 同分类再玩一张
               </button>
-              {/* <button
-                className="save-btn"
-                onClick={() => {
-                  alert('已保存你们的甜蜜回忆～')
-                  navigate('/couple-games')
-                }}
+              <button
+                className="change-difficulty-btn"
+                onClick={() => setStage('difficulty')}
               >
-                保存回忆
-              </button> */}
+                更换难度再玩
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ---------------------- 新增：上一步/下一步按钮 ---------------------- */}
       <div className="step-nav-buttons">
         <button
           className="step-prev-btn"
@@ -522,7 +599,11 @@ const CouplePuzzle = () => {
           onClick={goNextStep}
           disabled={isNextDisabled}
         >
-          {stage === 'complete' ? '重新选择分类' : '下一步'}
+          {stage === 'difficulty'
+            ? '开始游戏'
+            : stage === 'complete'
+            ? '重新选择分类'
+            : '下一步'}
         </button>
       </div>
     </div>
@@ -530,3 +611,4 @@ const CouplePuzzle = () => {
 }
 
 export default CouplePuzzle
+    
