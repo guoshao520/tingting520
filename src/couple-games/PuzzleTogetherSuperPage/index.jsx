@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import './PuzzleTogetherPage.less'
 import TopNavBar from '@/components/TopNavBar'
 import EmptyState from '@/components/EmptyState'
+import ImagePreview from '@/components/ImagePreview'
 import { useNavigate } from 'react-router-dom'
 import photos from '@/api/photos'
 import photo_category from '@/api/photo_category'
@@ -362,7 +363,8 @@ const CouplePuzzle = () => {
                     className="photo-item"
                     onClick={() => handlePhotoSelect(photo)}
                   >
-                    <img src={getImgUrl(photo.image_url)} alt={photo.name} />
+                    {/* <img src={getImgUrl(photo.image_url)} alt={photo.name} /> */}
+                    <ImagePreview image={getImgUrl(photo.image_url)} />
                   </div>
                 ))}
               </div>
@@ -553,14 +555,14 @@ const CouplePuzzle = () => {
                 <span>总用时</span>
                 <span>{formatTime(timer)}</span>
               </div>
-              <div className="stat-row">
+              {/* <div className="stat-row">
                 <span>完成块数</span>
                 <span>{puzzleSize * puzzleSize - 1} 块（含1块空块）</span>
-              </div>
-              <div className="stat-row">
+              </div> */}
+              {/* <div className="stat-row">
                 <span>爱心值</span>
                 <span>{lovePoints} 💖</span>
-              </div>
+              </div> */}
             </div>
             <div className="complete-actions">
               <button
@@ -586,7 +588,7 @@ const CouplePuzzle = () => {
         </div>
       )}
 
-      <div className="step-nav-buttons">
+      {!(stage === 'complete' && selectedPhoto) && <div className="step-nav-buttons">
         <button
           className="step-prev-btn"
           onClick={goPrevStep}
@@ -605,7 +607,7 @@ const CouplePuzzle = () => {
             ? '重新选择分类'
             : '下一步'}
         </button>
-      </div>
+      </div>}
     </div>
   )
 }
