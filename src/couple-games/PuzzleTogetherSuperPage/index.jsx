@@ -363,8 +363,7 @@ const CouplePuzzle = () => {
                     className="photo-item"
                     onClick={() => handlePhotoSelect(photo)}
                   >
-                    {/* <img src={getImgUrl(photo.image_url)} alt={photo.name} /> */}
-                    <ImagePreview image={getImgUrl(photo.image_url)} />
+                    <img src={getImgUrl(photo.image_url)} alt={photo.name} />
                   </div>
                 ))}
               </div>
@@ -542,7 +541,8 @@ const CouplePuzzle = () => {
           <div className="complete-card">
             <h2>太棒了！{selectedDifficulty.name}难度挑战成功～</h2>
             <div className="completed-image">
-              <img src={getImgUrl(selectedPhoto.image_url)} alt="完成的拼图" />
+              {/* <img src={getImgUrl(selectedPhoto.image_url)} alt="完成的拼图" /> */}
+              <ImagePreview image={getImgUrl(selectedPhoto.image_url)} />
             </div>
             <div className="complete-stats">
               <div className="stat-row">
