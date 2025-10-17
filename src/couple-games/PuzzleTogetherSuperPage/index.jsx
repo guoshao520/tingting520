@@ -539,6 +539,11 @@ const CouplePuzzle = () => {
         <div className="puzzle-complete">
           <div className="confetti"></div>
           <div className="complete-card">
+            {/* <div className="complete-hearts">
+              {[...Array(5)].map((_, i) => (
+                <Heart key={i} size={24} color="#ff4d6d" animate />
+              ))}
+            </div> */}
             <h2>太棒了！{selectedDifficulty.name}难度挑战成功～</h2>
             <div className="completed-image">
               {/* <img src={getImgUrl(selectedPhoto.image_url)} alt="完成的拼图" /> */}
