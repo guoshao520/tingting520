@@ -23,6 +23,7 @@ import { calculateDaysFromNow } from '@/utils';
 import memory from '@/api/memory';
 import importantDate from '@/api/importantDate';
 import wish from '@/api/wish';
+import userApi from '@/api/user'; // 引入用户接口
 import { getLoginInfo } from '@/utils/storage';
 
 function ProfilePage() {
@@ -31,12 +32,14 @@ function ProfilePage() {
   const [memories, setMemories] = useState([]);
   const [importantDates, setImportantDates] = useState([]);
   const [wishs, setWishs] = useState([]);
-  const [info, setInfo] = useState({});
-  const imgList = [
-    window._config.DOMAIN_URL + 'photos/Image_53712341142431-1759308638455.jpg',
-  ];
+  const [userInfo, setUserInfo] = useState({}); // 存储接口获取的用户信息
+  const [loading, setLoading] = useState(true); // 加载状态
 
-  function goToCoupleGames() {
+  function toProfileForm() {
+    navigate('/profile-form');
+  }
+
+  function toCoupleGames() {
     navigate('/couple-games/home');
   }
 
@@ -48,8 +51,20 @@ function ProfilePage() {
     navigate('/set');
   }
 
-  const loginInfo = getLoginInfo()
-  const couple_id = loginInfo?.couple?.id
+  const loginInfo = getLoginInfo();
+  const couple_id = loginInfo?.couple?.id;
+
+  // 获取用户详情（从接口）
+  async function getUserDetail() {
+    try {
+      const res = await userApi.detail();
+      if (res?.code === 200 && res.data) {
+        setUserInfo(res.data); // 从接口更新用户信息
+      }
+    } catch (error) {
+      console.error('获取用户详情失败:', error);
+    }
+  }
 
   async function getMemoriesList() {
     const { data } = await memory.list({ couple_id });
@@ -67,24 +82,33 @@ function ProfilePage() {
   }
 
   useEffect(() => {
-    const loginInfo = getLoginInfo();
-    setInfo(loginInfo);
-    getMemoriesList();
-    getImportantDatesList();
-    getWishList();
+    async function initData() {
+      setLoading(true);
+      // 先获取用户详情（接口）
+      await getUserDetail();
+      // 再获取其他数据
+      await Promise.all([
+        getMemoriesList(),
+        getImportantDatesList(),
+        getWishList()
+      ]);
+      setLoading(false);
+    }
+
+    initData();
   }, []);
 
   return (
     <div className="page">
-      <div className="profile-header">
+      <div className="profile-header" onClick={toProfileForm}>
         <div className="profile-avatar">
-          {info?.user?.avatar && (
-            <ImagePreview image={info?.user?.avatar || ''} />
+          {userInfo?.avatar && (
+            <ImagePreview image={userInfo.avatar || ''} />
           )}
         </div>
         <div className="profile-info">
-          <h2>{info?.user?.nickname || '-'}</h2>
-          <p>{info?.user?.sex === 1 ? '男' : '女'}</p>
+          <h2>{userInfo?.nickname || '-'}</h2>
+          <p>{userInfo?.sex === 1 ? '男' : '女'}</p>
         </div>
       </div>
 
@@ -104,7 +128,7 @@ function ProfilePage() {
       </div>
 
       <div className="profile-menu">
-        <div className="menu-item" onClick={goToCoupleGames}>
+        <div className="menu-item" onClick={toCoupleGames}>
           <div
             className="menu-icon"
             style={{ background: 'rgba(72, 187, 120, 0.1)' }}

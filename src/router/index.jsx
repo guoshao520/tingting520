@@ -20,6 +20,7 @@ import UpdatePasswordPage from '@/pages/UpdatePasswordPage';
 import ThemePage from '@/pages/ThemePage';
 import ClassifysPage from '@/pages/ClassifysPage';
 import ClassifyForm from '@/pages/ClassifyForm';
+import ProfileForm from '@/pages/ProfileForm';
 // 情侣小游戏
 import CoupleHomePage from '@/couple-games/HomePage';
 import PuzzleTogetherPage from '@/couple-games/PuzzleTogetherPage';
@@ -48,6 +49,7 @@ export const routeConfig = [
   { path: "/dates", element: <ImportantDatesPage />, showLayout: true },
   { path: "/album", element: <AlbumPage />, showLayout: true },
   { path: "/profile", element: <ProfilePage />, showLayout: true },
+  { path: "/profile-form", element: <ProfileForm />, showLayout: true },
   { path: "/set", element: <SettingsPage />, showLayout: true },
   { path: "/upload", element: <UploadPage />, showLayout: true },
   { path: "/memory-form", element: <MemoryForm />, showLayout: true },

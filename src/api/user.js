@@ -2,7 +2,7 @@ import http from '@/utils/request';
 
 const user = {
   // 查询用户详情
-  detail: (id) => http.get(`/user/detail/${id}`),
+  detail: () => http.get(`/user/detail`),
 
   // 更新用户信息
   update: (data) => http.put(`/user/update`, data),

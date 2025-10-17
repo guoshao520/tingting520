@@ -1,0 +1,384 @@
+.profile-edit-container {
+  min-height: 100vh;
+  background-color: var(--accent-color);
+
+  // 顶部导航栏右侧保存按钮
+  .save-button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.427rem;
+    font-weight: 600;
+    padding: 0 0.267rem;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .profile-edit-content {
+    max-width: 13.333rem;
+    margin: 0 auto;
+    padding: 0 0.533rem;
+
+    // 头像编辑区域
+    .avatar-edit-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.6rem 0;
+
+      .avatar-container {
+        position: relative;
+        width: 3.2rem;
+        height: 3.2rem;
+        cursor: pointer;
+
+        .avatar-img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 0.053rem solid #eee;
+          transition: opacity 0.2s;
+        }
+
+        .avatar-edit-mask {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background-color: rgba(0, 0, 0, 0.4);
+          color: white;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.2s;
+          gap: 0.133rem;
+
+          .avatar-edit-text {
+            font-size: 0.32rem;
+          }
+        }
+
+        &:hover {
+          .avatar-img {
+            opacity: 0.8;
+          }
+          .avatar-edit-mask {
+            opacity: 1;
+          }
+        }
+      }
+
+      .avatar-hint {
+        color: #666;
+        font-size: 0.347rem;
+        margin: 0;
+      }
+    }
+
+    // 表单区域
+    .profile-form {
+      background: white;
+      border-radius: 0.427rem;
+      box-shadow: 0 0.053rem 0.32rem rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    // 表单项（普通状态）
+    .form-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.533rem;
+      border-bottom: 0.027rem solid #f0f0f0;
+      transition: background-color 0.2s;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover:not(.editing) {
+        background-color: #f8f9fa;
+      }
+
+      .form-item-left {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        .form-icon {
+          color: #666;
+          font-size: 0.4rem;
+          width: 0.533rem;
+          text-align: center;
+          position: relative;
+          top: 0.06rem;
+        }
+
+        .form-label {
+          color: #333;
+          font-size: 0.427rem;
+          font-weight: 500;
+        }
+      }
+
+      .form-item-right {
+        display: flex;
+        align-items: center;
+        gap: 0.267rem;
+        position: relative;
+
+        .form-value {
+          color: #666;
+          font-size: 0.427rem;
+          flex: 1;
+          text-align: right;
+        }
+
+        .form-hint {
+          position: absolute;
+          right: 0;
+          bottom: -0.32rem;
+          color: #999;
+          font-size: 0.293rem;
+          white-space: nowrap;
+        }
+
+        .form-edit-btn {
+          background: none;
+          border: none;
+          color: #ccc;
+          cursor: pointer;
+          padding: 0.08rem;
+          transition: color 0.2s;
+
+          &:hover {
+            color: var(--primary-color);
+          }
+        }
+      }
+
+      // 表单项（编辑状态）
+      .form-item-edit {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.267rem;
+      }
+
+      .form-edit-label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.08rem;
+
+        .form-icon {
+          color: #666;
+          font-size: 0.4rem;
+          width: 0.533rem;
+          text-align: center;
+        }
+
+        .form-label {
+          color: #333;
+          font-size: 0.427rem;
+          font-weight: 500;
+        }
+      }
+
+      // 自定义编辑框
+      .edit-box {
+        display: flex;
+        align-items: center;
+        gap: 0.267rem;
+        width: 100%;
+
+        .edit-input {
+          flex: 1;
+          padding: 0.32rem 0.4rem;
+          border: 0.027rem solid #ddd;
+          border-radius: 0.213rem;
+          font-size: 0.4rem;
+          color: #333;
+          outline: none;
+
+          &:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.027rem rgba(255, 77, 109, 0.2);
+          }
+
+          &.date-input {
+            // 适配原生日期输入框样式
+            padding-right: 0.667rem;
+          }
+        }
+
+        // 性别选择编辑框
+        &.gender-edit-box {
+          .gender-options {
+            flex: 1;
+            display: flex;
+            gap: 0.4rem;
+
+            .gender-option {
+              flex: 1;
+              padding: 0.32rem 0;
+              border: 0.027rem solid #ddd;
+              border-radius: 0.213rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.133rem;
+              cursor: pointer;
+              transition: all 0.2s;
+
+              .gender-icon {
+                color: #666;
+                font-size: 0.4rem;
+              }
+
+              .gender-label {
+                color: #666;
+                font-size: 0.4rem;
+              }
+
+              &.active {
+                border-color: var(--primary-color);
+                background-color: rgba(255, 77, 109, 0.05);
+
+                .gender-icon,
+                .gender-label {
+                  color: var(--primary-color);
+                }
+              }
+
+              &:hover:not(.active) {
+                border-color: #bbb;
+              }
+            }
+          }
+        }
+
+        // 编辑框按钮组
+        .edit-buttons {
+          display: flex;
+          gap: 0.133rem;
+        }
+
+        .edit-btn {
+          width: 0.907rem;
+          height: 0.907rem;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          cursor: pointer;
+          transition: background-color 0.2s;
+
+          &.cancel-btn {
+            background-color: #f5f5f5;
+            color: #666;
+
+            &:hover {
+              background-color: #eee;
+            }
+          }
+
+          &.confirm-btn {
+            background-color: var(--primary-color);
+            color: white;
+
+            &:hover {
+              background-color: #d9214e;
+            }
+          }
+        }
+      }
+    }
+    .profile-save-bottom {
+      margin: 0.8rem auto;
+      width: 90%;
+      max-width: 8rem;
+    }
+
+    .save-button-bottom {
+      width: 100%;
+      padding: 0.4rem 0;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.8rem;
+      font-size: 0.427rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0.107rem 0.4rem rgba(255, 77, 109, 0.3);
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      &:not(:disabled):hover {
+        background: #d9214e;
+        box-shadow: 0 0.16rem 0.533rem rgba(255, 77, 109, 0.4);
+      }
+    }
+  }
+}
+
+// 响应式调整
+@media (max-width: 480px) {
+  .profile-edit-content {
+    .avatar-edit-section {
+      padding: 0.6rem 0;
+
+      .avatar-container {
+        width: 2.667rem;
+        height: 2.667rem;
+      }
+    }
+
+    .form-item {
+      padding: 0.427rem;
+
+      .form-label,
+      .form-value {
+        font-size: 0.4rem;
+      }
+
+      .edit-box {
+        .edit-input {
+          padding: 0.267rem 0.32rem;
+          font-size: 0.373rem;
+        }
+
+        .gender-options {
+          gap: 0.267rem;
+        }
+
+        .gender-option {
+          padding: 0.267rem 0;
+          gap: 0.08rem;
+
+          .gender-icon,
+          .gender-label {
+            font-size: 0.373rem;
+          }
+        }
+
+        .edit-btn {
+          width: 0.8rem;
+          height: 0.8rem;
+        }
+      }
+    }
+  }
+}
