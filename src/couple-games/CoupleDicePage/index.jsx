@@ -3,6 +3,7 @@ import './CoupleDicePage.less'
 import TopNavBar from '@/components/TopNavBar'
 import { useNavigate } from 'react-router-dom'
 import { rewardPunishPairs } from './rewards-punishments'
+import debounce from 'lodash/debounce';
 
 // 骰子点数样式配置（保留原配置）
 const diceDots = {
@@ -720,7 +721,7 @@ const CoupleDicePage = () => {
           {(gameStage === 'firstDiceResult' && firstDiceResult.valid) ||
           (gameStage === 'bet' && isReady) ||
           (gameStage === 'strategy' && isReady) ? (
-            <button className="next-stage-btn" onClick={goToNextStage}>
+            <button className="next-stage-btn" onClick={debounce(() => goToNextStage(), 500)}>
               {gameStage === 'firstDiceResult' && '进入下注阶段'}
               {gameStage === 'bet' && '下注完成，投掷第2个骰子'}
               {gameStage === 'strategy' && '策略选择完成，投掷最后1个骰子'}

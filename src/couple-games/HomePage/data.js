@@ -21,9 +21,9 @@ export const coupleGamesData = [
     id: 'couple-dice',
     name: '情侣骰子',
     desc: '掷骰子决定小任务，增加日常小惊喜',
-    primaryColor: '#FFB875', // 浅珊瑚橙（暖调，与粉色同属暖色）
-    secondaryColor: '#FFE0C3',
-    icon: <FaDice size={24} style={{ color: '#FFB875' }} />,
+    primaryColor: '#FF9F4A', // 深珊瑚橙（比原来深2个色阶）
+    secondaryColor: '#FFD1A6', // 配套浅色调（同步加深）
+    icon: <FaDice size={24} style={{ color: '#FF9F4A' }} />,
   },
   {
     id: 'heart-mine-capture',
