@@ -1,0 +1,64 @@
+.footer-record {
+  width: 100%;
+  padding: 0.5333rem 0.64rem;
+  box-sizing: border-box;
+  background-color: #f5f7fa;
+  color: #5c6270;
+  font-size: 0.32rem;
+  text-align: center;
+  border-top: 0.0267rem solid #e5e9f2;
+  position: relative;
+  bottom: 2rem;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.03);
+
+  &__copyright {
+    margin: 0 0 0.2667rem;
+    line-height: 1.6;
+    letter-spacing: 0.0133rem;
+  }
+
+  &__container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2667rem;
+    margin: 0 0 0.2667rem;
+    line-height: 1.6;
+  }
+
+  &__link {
+    color: #5c6270;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0 0.08rem;
+    border-radius: 0.0533rem;
+
+    &:hover {
+      color: #3b82f6;
+      text-decoration: none;
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+  }
+
+  &__separator {
+    color: #d1d5db;
+    font-size: 0.2667rem;
+  }
+
+  &__extra {
+    margin: 0;
+    line-height: 1.6;
+    color: #94a3b8;
+    font-size: 0.2933rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.4267rem 0.5333rem;
+    font-size: 0.2933rem;
+
+    &__container {
+      flex-wrap: wrap;
+      gap: 0.2133rem 0.3733rem;
+    }
+  }
+}

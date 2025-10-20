@@ -1,5 +1,11 @@
 import { createRef, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 // 主界面
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
@@ -25,9 +31,9 @@ import ProfileForm from '@/pages/ProfileForm';
 import CoupleHomePage from '@/couple-games/HomePage';
 import PuzzleTogetherPage from '@/couple-games/PuzzleTogetherPage';
 import CoupleDicePage from '@/couple-games/CoupleDicePage';
-import PuzzleTogetherSuperPage from '@/couple-games/PuzzleTogetherSuperPage';
-import CoupleDiceSuperPage from '@/couple-games/CoupleDiceSuperPage';
+import HeartMineCaturePage from '@/couple-games/HeartMineCaturePage';
 import BottomNavigation from '@/components/BottomNavigation';
+import FooterRecord from '@/components/FooterRecord';
 
 // 1. 全局导航ref（供外部调用）
 export const navigateRef = createRef();
@@ -42,56 +48,85 @@ export const navigate = (...args) => {
 // 3. 路由配置数组
 export const routeConfig = [
   // 主界面
-  { path: "/login", element: <LoginPage />, showLayout: false },
-  { path: "/", element: <HomePage />, showLayout: true },
-  { path: "/memories", element: <MemoriesPage />, showLayout: true },
-  { path: "/memories/:id", element: <MemoriesDetail />, showLayout: true },
-  { path: "/dates", element: <ImportantDatesPage />, showLayout: true },
-  { path: "/album", element: <AlbumPage />, showLayout: true },
-  { path: "/profile", element: <ProfilePage />, showLayout: true },
-  { path: "/profile-form", element: <ProfileForm />, showLayout: true },
-  { path: "/set", element: <SettingsPage />, showLayout: true },
-  { path: "/upload", element: <UploadPage />, showLayout: true },
-  { path: "/memory-form", element: <MemoryForm />, showLayout: true },
-  { path: "/date-form", element: <DateForm />, showLayout: true },
-  { path: "/wish-list", element: <WishListPage />, showLayout: true },
-  { path: "/wish-form", element: <WishForm />, showLayout: true },
-  { path: "/set-safety-issue", element: <SetSafetyIssuePage />, showLayout: true },
-  { path: "/retrieve-password", element: <RetrievePasswordPage />, showLayout: true },
-  { path: "/update-password", element: <UpdatePasswordPage />, showLayout: true },
-  { path: "/theme", element: <ThemePage />, showLayout: true },
-  { path: "/classifys", element: <ClassifysPage />, showLayout: true },
-  { path: "/classify-form", element: <ClassifyForm />, showLayout: true },
+  { path: '/login', element: <LoginPage />, showLayout: false },
+  { path: '/', element: <HomePage />, showLayout: true },
+  { path: '/memories', element: <MemoriesPage />, showLayout: true },
+  { path: '/memories/:id', element: <MemoriesDetail />, showLayout: true },
+  { path: '/dates', element: <ImportantDatesPage />, showLayout: true },
+  { path: '/album', element: <AlbumPage />, showLayout: true },
+  { path: '/profile', element: <ProfilePage />, showLayout: true },
+  { path: '/profile-form', element: <ProfileForm />, showLayout: true },
+  { path: '/set', element: <SettingsPage />, showLayout: true },
+  { path: '/upload', element: <UploadPage />, showLayout: true },
+  { path: '/memory-form', element: <MemoryForm />, showLayout: true },
+  { path: '/date-form', element: <DateForm />, showLayout: true },
+  { path: '/wish-list', element: <WishListPage />, showLayout: true },
+  { path: '/wish-form', element: <WishForm />, showLayout: true },
+  {
+    path: '/set-safety-issue',
+    element: <SetSafetyIssuePage />,
+    showLayout: true,
+  },
+  {
+    path: '/retrieve-password',
+    element: <RetrievePasswordPage />,
+    showLayout: true,
+  },
+  {
+    path: '/update-password',
+    element: <UpdatePasswordPage />,
+    showLayout: true,
+  },
+  { path: '/theme', element: <ThemePage />, showLayout: true },
+  { path: '/classifys', element: <ClassifysPage />, showLayout: true },
+  { path: '/classify-form', element: <ClassifyForm />, showLayout: true },
   // 情侣小游戏
-  { path: "/couple-games/home", element: <CoupleHomePage />, showLayout: true },
-  { path: "/couple-games/puzzle-together", element: <PuzzleTogetherPage />, showLayout: true },
-  { path: "/couple-games/couple-dice", element: <CoupleDicePage />, showLayout: true },
-  { path: "/couple-games/puzzle-together-super", element: <PuzzleTogetherSuperPage />, showLayout: true },
-  { path: "/couple-games/couple-dice-super", element: <CoupleDiceSuperPage />, showLayout: true },
+  { path: '/couple-games/home', element: <CoupleHomePage />, showLayout: true },
+  {
+    path: '/couple-games/puzzle-together',
+    element: <PuzzleTogetherPage />,
+    showLayout: true,
+  },
+  {
+    path: '/couple-games/couple-dice',
+    element: <CoupleDicePage />,
+    showLayout: true,
+  },
+  {
+    path: '/couple-games/heart-mine-capture',
+    element: <HeartMineCaturePage />,
+    showLayout: true,
+  },
 ];
 
-// 4. 布局组件（包含滚动处理）
+// 4. 布局组件（包含滚动处理 + FooterRecord路由判断）
 const Layout = () => {
   const location = useLocation();
-  
+
   // 查找当前路由配置
-  const currentRoute = routeConfig.find(route => 
+  const currentRoute = routeConfig.find((route) =>
     location.pathname.startsWith(route.path.replace(':id', ''))
   );
   const showLayout = currentRoute?.showLayout !== false;
+  // 关键判断：当前路由为 /album 时，不显示 FooterRecord
+  const paths = ['/album'];
+  const showFooter =
+    !paths.includes(location.pathname) &&
+    !location.pathname.includes('couple-games');
 
   // 路由变化时滚动到顶部
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     // 处理局部滚动容器（如有）
-    document.querySelectorAll('.scroll-container').forEach(container => {
+    document.querySelectorAll('.scroll-container').forEach((container) => {
       container.scrollTop = 0;
     });
   }, [location.pathname]);
 
   return (
     <div className="App min-h-screen flex flex-col">
-      <main className={`flex-1 ${showLayout ? '' : 'fullscreen-main'}`} 
+      <main
+        className={`flex-1 ${showLayout ? '' : 'fullscreen-main'}`}
         style={{ marginBottom: showLayout ? '2rem' : 0 }}
       >
         <Routes>
@@ -101,6 +136,16 @@ const Layout = () => {
         </Routes>
       </main>
       {showLayout && <BottomNavigation />}
+      {/* 仅当 showFooter 为 true 时才渲染 FooterRecord */}
+      {showFooter && (
+        <FooterRecord
+          icpRecord="鄂ICP备2025150734号-1"
+          // policeRecord="粤公网安备440106XXXX号"
+          copyright="© 2025 郭步. 保留所有权利"
+          extraText="本网站内容未经许可不得擅自转载"
+          bottom={location.pathname === '/login' ? '0rem' : '2rem'}
+        />
+      )}
     </div>
   );
 };

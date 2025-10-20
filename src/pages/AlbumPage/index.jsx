@@ -140,7 +140,7 @@ function AlbumPage() {
         );
       }
 
-      setEditMode(false); // 加载数据后重置编辑模式（保留第一个代码逻辑）
+      // setEditMode(false); // 加载数据后重置编辑模式（保留第一个代码逻辑）
     } catch (error) {
       console.error('获取相册列表失败:', error);
       toastFail(isLoadMore ? '加载更多失败，请重试' : '获取相册失败，请重试');

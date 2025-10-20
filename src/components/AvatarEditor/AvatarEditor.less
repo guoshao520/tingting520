@@ -1,0 +1,286 @@
+.avatar-editor {
+  --avatar-size: 120px; /* 头像基础尺寸（由组件props动态控制） */
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  /* 头像预览与上传触发区 */
+  .avatar-preview-container {
+    text-align: center;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    cursor: pointer; /* 提示可点击 */
+    pointer-events: auto;
+
+    /* 拖放时样式 */
+    &.dragging {
+      background-color: #e6f0fa;
+      border-color: #4a90e2;
+    }
+
+    /* 上传中样式（禁用点击） */
+    &.uploading {
+      cursor: wait;
+      opacity: 0.9;
+    }
+
+    /* 圆形头像容器 */
+    .avatar-preview {
+      position: relative;
+      width: var(--avatar-size);
+      height: var(--avatar-size);
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto;
+      border: 2px solid #eee;
+      background-color: #f5f5f5;
+      transition: border-color 0.3s ease;
+
+      /*  hover时边框变色 */
+      &:hover {
+        border-color: #4a90e2;
+      }
+
+      /* 已有头像图片 */
+      .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.3s ease;
+      }
+
+      /* 无头像占位符 */
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+
+        p {
+          margin-top: 8px;
+          font-size: 12px;
+          margin: 8px 0 0;
+          line-height: 1.2;
+        }
+      }
+
+      /* 编辑提示图标（hover显示） */
+      .avatar-edit-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+
+        .avatar-preview:hover & {
+          opacity: 1;
+        }
+      }
+
+      /* 清空头像按钮 */
+      .avatar-clear-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 10;
+
+        &:hover {
+          background-color: #ff4d4f;
+        }
+
+        .avatar-preview:hover & {
+          opacity: 1;
+        }
+      }
+    }
+
+    /* 上传进度条 */
+    .avatar-upload-progress {
+      margin-top: 12px;
+      width: 100%;
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background-color: #f0f0f0;
+        border-radius: 3px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          background-color: #4a90e2;
+          transition: width 0.3s ease;
+        }
+      }
+
+      p {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  /* 裁剪弹窗遮罩层 */
+  .avatar-cropper-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* 确保弹窗在最上层 */
+    padding: 16px;
+    overflow: hidden; /* 禁止遮罩层滚动 */
+    pointer-events: auto; /* 捕获所有点击事件 */
+    transform: translateZ(0);
+    will-change: opacity;
+    /* 裁剪弹窗内容区 */
+    .cropper-content {
+      width: 100%;
+      max-width: 600px;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      max-height: 90vh; /* 限制弹窗最大高度，避免超出屏幕 */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 裁剪弹窗头部 */
+    .cropper-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      background-color: #fafafa;
+
+      h3 {
+        font-size: 16px;
+        color: #333;
+        margin: 0;
+        font-weight: 500;
+      }
+
+      .cropper-close-btn {
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 4px;
+        line-height: 1;
+
+        &:hover {
+          color: #333;
+        }
+      }
+    }
+
+    /* 裁剪区域容器 */
+    .cropper-container {
+      flex: 1; /* 让裁剪区域自适应剩余高度 */
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      overflow: hidden; /* 禁止裁剪区域内部滚动 */
+      background-color: #fff;
+    }
+
+    /* 裁剪操作按钮区 */
+    .cropper-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 16px;
+      background-color: #fafafa;
+      border-top: 1px solid #eee;
+
+      .cropper-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 14px;
+        font-weight: 500;
+
+        /* 取消按钮 */
+        &.cancel-btn {
+          background-color: #f5f5f5;
+          color: #666;
+
+          &:hover {
+            background-color: #eee;
+          }
+
+          &:disabled {
+            background-color: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+          }
+        }
+
+        /* 确认按钮 */
+        &.confirm-btn {
+          background-color: #4a90e2;
+          color: white;
+
+          &:hover {
+            background-color: #3d7bc2;
+          }
+
+          &:disabled {
+            background-color: #a0c4e8;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
+
+  // 裁剪组件图片样式：用CSS控制尺寸，避免内联样式重绘
+  .cropper-img {
+    width: 100%;
+    height: 300px;
+    // 硬件加速，提升滑动流畅度
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  // 进度条：优化过渡效果，避免卡顿
+  .avatar-upload-progress .progress-fill {
+    transition: width 0.2s ease-out; // 缩短过渡时间，提升响应速度
+  }
+}

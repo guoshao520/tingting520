@@ -706,3 +706,146 @@
     font-size: 0.373rem;
   }
 }
+
+// 全局动画（无修改，多组件共用）
+@keyframes bounce {
+  0% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+}
+
+@keyframes confetti {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 26.667rem 26.667rem, 13.333rem 13.333rem,
+      21.333rem 21.333rem;
+  }
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.1);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.heart-animate {
+  animation: heartbeat 1.5s infinite;
+}
+
+/* 难度选择页：整体容器适配小屏 */
+.difficulty-select {
+  padding: 0 0.4rem;
+  padding-top: 0.267rem;
+}
+
+/* 难度卡片网格：响应式列数 + 居中 */
+.difficulty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.32rem;
+  margin: 0 auto;
+  max-width: 9rem;
+  justify-items: center; /* 卡片水平居中 */
+}
+
+/* 难度卡片：统一尺寸 + 内容居中 */
+.difficulty-card {
+  background: #fff;
+  border-radius: 0.32rem;
+  padding: 0.4rem 0.267rem;
+  text-align: center;
+  box-shadow: 0 0.08rem 0.213rem rgba(217, 33, 78, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%; /* 卡片占满网格列 */
+  max-width: 2.6rem; /* 限制最大宽度，避免拉伸 */
+  box-sizing: border-box;
+
+  &.active {
+    border: 0.053rem solid #ff4d6d;
+    box-shadow: 0 0.107rem 0.32rem rgba(217, 33, 78, 0.15);
+  }
+
+  &:hover {
+    transform: translateY(-0.053rem);
+    box-shadow: 0 0.107rem 0.32rem rgba(217, 33, 78, 0.12);
+  }
+
+  .difficulty-name {
+    font-size: 0.427rem;
+    font-weight: 600;
+    color: #d9214e;
+    margin-bottom: 0.133rem;
+  }
+
+  .difficulty-desc {
+    font-size: 0.32rem;
+    color: #666;
+    margin-bottom: 0.267rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* 单行显示，避免换行错乱 */
+  }
+
+  .difficulty-preview {
+    display: flex;
+    justify-content: center;
+    padding: 0.133rem 0;
+  }
+
+  .grid-preview {
+    display: grid;
+    gap: 0.08rem;
+    width: 1.6rem;
+    height: 1.6rem;
+
+    .grid-cell {
+      border-radius: 0.053rem;
+      background-color: #ffccd5;
+    }
+
+    .grid-cell:last-child {
+      background-color: #f0f0f0;
+    }
+  }
+}
